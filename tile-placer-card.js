@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.5.1";
+const TPC_VERSION = "0.6.0";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -164,6 +164,7 @@ button.btn:focus-visible, button.pencil:focus-visible { outline: 2px solid var(-
 button.pencil { position: absolute; top: 6px; right: 6px; z-index: 10; width: 36px; height: 36px; border-radius: 50%;
   border: 1px solid var(--divider-color); background: color-mix(in srgb, var(--card-background-color, #fff) 85%, transparent);
   color: var(--primary-text-color); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+.setup { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 10; }
 .empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   color: var(--secondary-text-color); font-size: 13px; text-align: center; padding: 16px; pointer-events: none; }
 `;
@@ -273,6 +274,13 @@ class TilePlacerCard extends HTMLElement {
         : "Choisis une image de fond dans les réglages de la carte, puis utilise le crayon pour ajouter des appareils.",
     });
     stage.append(this._emptyHint);
+
+    this._setupBtn = h("button", {
+      class: "btn primary setup", type: "button", text: "Créer la page « Plan » en un clic",
+      onclick: () => this._createPage(),
+    });
+    this._setupBtn.style.display = "none";
+    stage.append(this._setupBtn);
 
     this._pencil = h("button", {
       class: "pencil", type: "button", title: "Modifier le plan", "aria-label": "Modifier le plan",
@@ -406,6 +414,41 @@ class TilePlacerCard extends HTMLElement {
   _updatePencil() {
     if (!this._pencil) return;
     this._pencil.style.display = this._canEdit() && !this._editing ? "" : "none";
+    if (this._setupBtn) {
+      // Proposé seulement sur une carte neuve (sans bulle, hors page plein écran) pour ne pas se répéter sur la page créée.
+      const fresh = this._tiles.length === 0 && !this._config.fit_screen && !this._editing;
+      this._setupBtn.style.display = fresh && this._canEdit() ? "" : "none";
+    }
+  }
+
+  /* --- création de la page « Plan » en un clic --- */
+
+  async _createPage() {
+    if (!this._canEdit()) return;
+    if (!confirm("Créer une page « Plan » dans la barre latérale, avec cette carte en plein écran ?")) return;
+    this._setupBtn.disabled = true;
+    let path = null;
+    try {
+      const list = await this._hass.callWS({ type: "lovelace/dashboards/list" });
+      const used = new Set(list.map((d) => d.url_path));
+      path = "plan-editable";
+      for (let n = 2; used.has(path); n++) path = `plan-editable-${n}`;
+      await this._hass.callWS({
+        type: "lovelace/dashboards/create", url_path: path, title: "Plan", icon: "mdi:floor-plan",
+        show_in_sidebar: true, require_admin: false,
+      });
+      const card = { ...clone(this._config), fit_screen: true };
+      await this._hass.callWS({
+        type: "lovelace/config/save", url_path: path,
+        config: { title: "Plan", views: [{ title: "Plan", path: "plan", type: "panel", cards: [card] }] },
+      });
+      location.assign(`/${path}`);
+    } catch (err) {
+      this._setupBtn.disabled = false;
+      alert("Création de la page impossible : " + (err && err.message ? err.message : JSON.stringify(err))
+        + (path ? `
+Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres, Tableaux de bord.` : ""));
+    }
   }
 
   /* --- édition --- */
@@ -439,11 +482,24 @@ class TilePlacerCard extends HTMLElement {
       onclick: () => this._save(),
     });
     save.disabled = this._saving || !this._dirty;
+    const bg = h("button", { class: "btn", type: "button", text: "Image de fond…", onclick: () => this._setBackground() });
     const cancel = h("button", { class: "btn", type: "button", text: "Annuler", onclick: () => this._cancelEdit() });
     cancel.disabled = this._saving;
     const msg = h("div", { class: "msg" + (this._msg ? " " + this._msg.kind : ""), role: "status", "aria-live": "polite" });
     msg.textContent = this._msg ? this._msg.text : (this._dirty ? "Modifications non enregistrées." : "Glisse les tuiles ; clique pour configurer.");
-    tb.append(add, save, cancel, msg);
+    tb.append(add, bg, save, cancel, msg);
+  }
+
+  _setBackground() {
+    const cur = this._config.background || "";
+    const v = prompt("Adresse de l'image de fond (ex. /local/plan.png). Le fichier doit être dans /config/www/.", cur);
+    if (v === null) return;
+    const val = v.trim();
+    if (val === cur) return;
+    if (val) this._config.background = val;
+    else delete this._config.background;
+    this._build();
+    this._markDirty();
   }
 
   _setMsg(kind, text) {
@@ -459,13 +515,12 @@ class TilePlacerCard extends HTMLElement {
 
   _cancelEdit() {
     if (this._dirty && !confirm("Abandonner les modifications non enregistrées ?")) return;
+    this._config = JSON.parse(this._baseline); // annule aussi un changement d'image de fond
     this._tiles = (this._config.tiles || []).map((t) => ({ ...clone(t), id: t.id || newId() }));
     this._editing = false;
     this._dirty = false;
     this._msg = null;
-    this._rebuildTiles();
-    this._applyEditState();
-    this._updatePencil();
+    this._build();
   }
 
   _rebuildTiles() {

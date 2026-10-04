@@ -50,15 +50,16 @@ HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 ### À la main
 
 1. Copie `tile-placer-card.js` dans `/config/www/`.
-2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.5.1` en type **Module JavaScript**.
+2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.6.0` en type **Module JavaScript**.
 3. Change la valeur de `?v=` à chaque mise à jour : Home Assistant garde `/local/` en cache très longtemps.
 
 ## Démarrage rapide
 
 1. **Prépare l'image du plan.** Mets-la dans `/config/www/` (par exemple `plan.png`). Elle sera accessible sous `/local/plan.png`.
 2. **Ajoute la carte sans écrire de YAML.** Modifie ton dashboard, clique sur **Ajouter une carte**, cherche **Tile Placer Card**. Dans l'éditeur visuel, renseigne l'**image de fond** (`/local/plan.png`) et coche **Agrandir à la hauteur de l'écran**. Les proportions sont lues sur l'image : tu n'as rien à calculer. Pour une carte qui occupe tout l'écran, mets-la dans une vue de type **Panneau (1 carte)**.
-3. **Enregistre le dashboard** et quitte le mode édition de Home Assistant.
-4. **Clique sur le crayon** en haut à droite de la carte, puis sur **+ Nouvel appareil**. Choisis l'entité dans le panneau, glisse la bulle à sa place, clique sur **Enregistrer**.
+3. **Clique sur « Créer la page « Plan » en un clic ».** Ce bouton apparaît sur la carte neuve, pour les administrateurs. Il crée un dashboard **Plan** dans la barre latérale, avec la carte en plein écran, et t'y emmène : l'adresse est `/plan-editable`. Ensuite, un clic sur « Plan » dans la barre latérale suffit.
+   (Si tu préfères placer la carte toi-même, enregistre le dashboard et quitte le mode édition de Home Assistant.)
+4. **Clique sur le crayon** en haut à droite de la carte, puis sur **+ Nouvel appareil**. Choisis l'entité dans le panneau, glisse la bulle à sa place, clique sur **Enregistrer**. Si l'image de fond n'est pas encore réglée, le bouton **Image de fond…** de la barre d'outils la demande.
 
 Le crayon n'apparaît que pour un compte administrateur. Le même réglage en YAML :
 
@@ -83,7 +84,7 @@ En dehors du mode édition, la carte se comporte comme un tableau de bord normal
 
 ### Entrer en mode édition
 
-Clique sur le **crayon**. Un cadre en pointillés et une grille apparaissent, et une barre d'outils s'affiche sous le plan : **+ Nouvel appareil**, **Enregistrer**, **Annuler** et un message d'état.
+Clique sur le **crayon**. Un cadre en pointillés et une grille apparaissent, et une barre d'outils s'affiche sous le plan : **+ Nouvel appareil**, **Image de fond…**, **Enregistrer**, **Annuler** et un message d'état.
 
 ### Déplacer une bulle
 
