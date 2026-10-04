@@ -12,9 +12,9 @@ Carte Lovelace (JavaScript natif, un seul fichier, sans build, sans dépendance)
 
 Elle s'inspire de l'add-on HA Views, mais elle est livrée sous forme de carte.
 
-![Illustration de Tile Placer Card](docs/preview.svg)
+![Capture d'écran de Tile Placer Card en mode édition](docs/screenshot.webp)
 
-*Illustration de la disposition (pas une capture d'écran) : des bulles sur un plan, une bulle sélectionnée et son panneau.*
+*Capture d'écran réelle, en mode édition : des appareils posés sur un plan, avec la barre d'outils en bas (« Nouvel appareil », « Image de fond… », « Enregistrer », « Annuler »).*
 
 > **État :** version `0.x`. Utilisée sur l'instance Home Assistant de l'auteur, dans un navigateur de bureau : déplacement, panneau de sélection, vue plein écran, actions au clic et nouvel appareil fonctionnent. Les écrans tactiles et l'application Companion ne sont **pas testés**. Voir [Limites connues](#limites-connues).
 

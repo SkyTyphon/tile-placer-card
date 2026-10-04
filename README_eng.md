@@ -12,9 +12,9 @@ A Lovelace card (plain JavaScript, single file, no build, no dependency) that pl
 
 Inspired by the HA Views add-on, but delivered as a card.
 
-![Illustration of Tile Placer Card](docs/preview.svg)
+![Screenshot of Tile Placer Card in edit mode](docs/screenshot.webp)
 
-*Illustration of the layout (not a screenshot): bubbles on a plan, a selected bubble and its panel.*
+*Real screenshot, in edit mode: devices placed on a floor plan, with the toolbar at the bottom ("Nouvel appareil" = new device, "Image de fond…" = background image, "Enregistrer" = save, "Annuler" = cancel).*
 
 > **Status:** `0.x`. Used on the author's own Home Assistant instance, in a desktop browser: dragging, selection panel, full-screen panel view, click actions and "New device" all work. Touch devices and the Companion app are **not tested**. See [Known limitations](#known-limitations).
 
