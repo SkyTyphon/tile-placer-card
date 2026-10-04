@@ -9,6 +9,10 @@ hold actions) from a panel that opens on the map. Changes are saved back into th
 
 Inspired by the HA Views add-on, but delivered as a card.
 
+![Illustration of Tile Placer Card](docs/preview.svg)
+
+*Illustration of the layout (not a screenshot): bubbles on a plan, a selected bubble and its panel.*
+
 > **Status:** `0.x`. Used on the author's own Home Assistant instance (desktop browser): drag and drop, selection
 > panel, full-screen panel view. Touch devices and the Companion app are **not tested**. See [Known limitations](#known-limitations).
 
