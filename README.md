@@ -52,7 +52,7 @@ HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 ### À la main
 
 1. Copie `tile-placer-card.js` dans `/config/www/`.
-2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.9.0` en type **Module JavaScript**.
+2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.9.1` en type **Module JavaScript**.
 3. Change la valeur de `?v=` à chaque mise à jour : Home Assistant garde `/local/` en cache très longtemps.
 
 ## Démarrage rapide
@@ -98,7 +98,7 @@ Clique sur **+ Nouvel appareil**. Une bulle de 36 px apparaît près du centre, 
 
 ### Régler une bulle
 
-Clique sur une bulle pour la sélectionner : un panneau flottant s'ouvre sur le plan et chaque changement se voit **en direct** sur la carte.
+Clique sur une bulle (sans la déplacer) pour la sélectionner : un panneau flottant s'ouvre sur le plan et chaque changement se voit **en direct** sur la carte.
 
 | Réglage | Effet |
 |---|---|

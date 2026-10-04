@@ -52,7 +52,7 @@ HACS registers the resource automatically, and updates also go through HACS.
 ### Manual
 
 1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.9.0` as a **JavaScript module**.
+2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.9.1` as a **JavaScript module**.
 3. Change the `?v=` value after each update: Home Assistant caches `/local/` for a very long time.
 
 ## Quick start
@@ -98,7 +98,7 @@ Click **+ New device**. A 36 px bubble appears near the centre, on a free spot s
 
 ### Configuring a bubble
 
-Click a bubble to select it: a floating panel opens on the map and every change is shown **live** on the card.
+Click a bubble (without dragging it) to select it: a floating panel opens on the map and every change is shown **live** on the card.
 
 | Setting | Effect |
 |---|---|

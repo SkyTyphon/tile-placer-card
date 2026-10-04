@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.0";
+const TPC_VERSION = "0.9.1";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -1062,8 +1062,13 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       try { el.releasePointerCapture(ev.pointerId); } catch (_) { /* ignore */ }
       if (cancelled) return;
       if (this._editing) {
-        if (s.moved) this._markDirty();
-        this._select(tile.id);
+        if (s.moved) {
+          // Un déplacement n'ouvre pas le panneau ; il ferme celui d'une autre bulle.
+          this._markDirty();
+          if (this._selectedId !== tile.id) this._select(null);
+        } else {
+          this._select(tile.id);
+        }
       } else if (!s.held && !s.cancelled) {
         this._handleTap(tile);
       }
