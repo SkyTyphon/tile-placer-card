@@ -1,0 +1,46 @@
+type: custom:tile-placer-card
+title: Ground floor                 # optional
+background: /local/plan.png         # optional (file in /config/www/plan.png)
+aspect_ratio: "16:9"                # "16:9", "4/3", "1.5" or "56.25%"; use the real ratio of your image
+fit_screen: true                    # optional: largest size that fits the screen height (useful in a panel view)
+label_mode: hover                   # default label display: hover | always | never
+editable: true                      # default true; editing is still reserved to administrators
+tiles:
+  - id: living
+    x_pct: 30
+    y_pct: 45
+    icon: mdi:ceiling-light
+    entity: light.living_room
+    name: Living room
+    size: 40
+    color: "#ffa500"
+    tap_action:
+      action: toggle
+    double_tap_action:
+      action: more-info
+    hold_action:
+      action: call-service
+      service: light.turn_on
+      data:
+        entity_id: light.living_room
+        brightness_pct: 100
+  - id: temperature
+    x_pct: 70
+    y_pct: 30
+    icon: mdi:thermometer
+    entity: sensor.living_room_temperature
+    name: Temperature
+    size: 36
+    show_state: true                # show the entity state under the bubble
+    label_mode: always
+    tap_action:
+      action: more-info
+  - id: to_kitchen
+    x_pct: 55
+    y_pct: 75
+    icon: mdi:silverware-fork-knife
+    name: Kitchen
+    transparent: true               # icon only, no bubble background
+    tap_action:
+      action: navigate
+      navigation_path: /lovelace/kitchen
