@@ -50,27 +50,24 @@ HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 ### À la main
 
 1. Copie `tile-placer-card.js` dans `/config/www/`.
-2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.4.0` en type **Module JavaScript**.
+2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.5.0` en type **Module JavaScript**.
 3. Change la valeur de `?v=` à chaque mise à jour : Home Assistant garde `/local/` en cache très longtemps.
 
 ## Démarrage rapide
 
-1. **Prépare l'image du plan.** Mets-la dans `/config/www/` (par exemple `plan.png`). Elle sera accessible sous `/local/plan.png`. Note ses dimensions : le rapport largeur sur hauteur doit être renseigné dans `aspect_ratio`, sinon les bulles ne tomberont pas aux bons endroits.
-2. **Crée une vue en mode Panneau.** Modifie ton dashboard, ajoute une vue, choisis le type de vue **Panneau (1 carte)**. La carte occupe alors tout l'espace.
-3. **Ajoute la carte** avec ce YAML minimal :
+1. **Prépare l'image du plan.** Mets-la dans `/config/www/` (par exemple `plan.png`). Elle sera accessible sous `/local/plan.png`.
+2. **Ajoute la carte sans écrire de YAML.** Modifie ton dashboard, clique sur **Ajouter une carte**, cherche **Tile Placer Card**. Dans l'éditeur visuel, renseigne l'**image de fond** (`/local/plan.png`) et coche **Agrandir à la hauteur de l'écran**. Les proportions sont lues sur l'image : tu n'as rien à calculer. Pour une carte qui occupe tout l'écran, mets-la dans une vue de type **Panneau (1 carte)**.
+3. **Enregistre le dashboard** et quitte le mode édition de Home Assistant.
+4. **Clique sur le crayon** en haut à droite de la carte, puis sur **+ Nouvel appareil**. Choisis l'entité dans le panneau, glisse la bulle à sa place, clique sur **Enregistrer**.
 
-   ```yaml
-   type: custom:tile-placer-card
-   background: /local/plan.png
-   aspect_ratio: "1200:896"
-   fit_screen: true
-   tiles: []
-   ```
+Le crayon n'apparaît que pour un compte administrateur. Le même réglage en YAML :
 
-4. **Enregistre le dashboard** et quitte le mode édition de Home Assistant.
-5. **Clique sur le crayon** en haut à droite de la carte, puis sur **+ Nouvel appareil**. Choisis l'entité dans le panneau, glisse la bulle à sa place, clique sur **Enregistrer**.
-
-Le crayon n'apparaît que pour un compte administrateur.
+```yaml
+type: custom:tile-placer-card
+background: /local/plan.png
+fit_screen: true
+tiles: []
+```
 
 ## Utiliser la carte au quotidien
 
@@ -124,7 +121,7 @@ L'enregistrement relit la configuration du dashboard, retrouve cette carte par c
 
 ## Configuration YAML
 
-La carte se configure en YAML. Il n'y a pas d'éditeur visuel de la carte : le YAML décrit le décor, et le mode édition sur le plan gère les bulles.
+Les réglages généraux (image, titre, proportions, affichage des noms) se font dans l'éditeur visuel de la carte ou en YAML ; le mode édition sur le plan gère les bulles.
 
 ```yaml
 type: custom:tile-placer-card
@@ -155,7 +152,7 @@ D'autres exemples sont dans [`examples/basic.yaml`](examples/basic.yaml).
 | Option | Description |
 |---|---|
 | `background` | URL de l'image (ex. `/local/plan.png`). Facultatif. Elle doit être accessible sans en-tête d'autorisation : place-la dans `/config/www/`. |
-| `aspect_ratio` | `16:9`, `4/3`, `1.5` ou `56.25%` (défaut `16:9`). **Utilise le vrai rapport de ton image**, sinon les positions ne correspondent pas au dessin. |
+| `aspect_ratio` | Facultatif. Sans valeur, les proportions sont lues sur l'image de fond. Sinon `16:9`, `4/3`, `1.5` ou `56.25%` ; dans ce cas, utilise le vrai rapport de ton image. Sans image ni valeur : `16:9`. |
 | `fit_screen` | `true` : la carte est aussi grande que possible sans dépasser la hauteur de l'écran, proportions conservées. Idéal dans une vue Panneau. |
 | `screen_offset` | Hauteur en px retirée de la hauteur d'écran quand `fit_screen` est actif (défaut `150`). |
 | `label_mode` | Affichage du nom par défaut : `hover` (défaut), `always`, `never`. |
@@ -215,7 +212,7 @@ hold_action:
 
 - **Carte en grand.** Mets la carte seule dans une vue de type **Panneau** avec `fit_screen: true`. Ajuste `screen_offset` si la carte dépasse ou laisse trop de marge.
 - **Image de fond.** Un fichier dans `/config/www/` est servi sous `/local/`. N'utilise pas `/media/` : ces fichiers demandent une autorisation que la balise image ne fournit pas.
-- **Rapport de l'image.** Divise la largeur par la hauteur du fichier (ex. 2400 × 1792 donne `"2400:1792"` ou `"1200:896"`). Une valeur fausse décale toutes les bulles.
+- **Rapport de l'image.** Laisse `aspect_ratio` vide : il est lu sur l'image. Si tu le fixes à la main, divise la largeur par la hauteur du fichier ; une valeur fausse décale toutes les bulles.
 - **Nom plutôt qu'état.** Pour une vue dense, laisse `show_state: false` et `label_mode: hover`, puis active l'état seulement sur les capteurs utiles.
 - **Plusieurs cartes identiques.** Ajoute un champ distinctif comme `title` pour que l'enregistrement sache laquelle modifier.
 
@@ -225,7 +222,7 @@ hold_action:
 - Le dashboard est déduit du premier segment de l'URL (`/lovelace/...` = dashboard par défaut). Une carte affichée ailleurs (aperçu de l'éditeur de carte, fenêtre) peut ne pas pouvoir enregistrer.
 - L'enregistrement est refusé si deux cartes du dashboard sont rigoureusement identiques.
 - Les actions sont codées dans la carte, sans le `handleAction` natif : pas de `confirmation`, de `haptic` ni de `repeat`.
-- Pas d'éditeur visuel de la carte : configure en YAML, puis utilise le mode édition sur le plan.
+- L'éditeur visuel couvre les réglages généraux seulement ; les bulles se gèrent sur le plan.
 - Si `ha-icon-picker` ou `ha-entity-picker` ne sont pas encore chargés (composants chargés à la demande par Home Assistant), le panneau bascule sur des champs texte.
 - En mode édition, les événements souris et tactiles des bulles ne remontent pas aux modules de navigation par balayage comme `hass-swipe-navigation`, sinon un glissement changerait de vue au lieu de déplacer la bulle.
 - Écrans tactiles et application Companion : non testés.

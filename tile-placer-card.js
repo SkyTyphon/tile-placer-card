@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.4.0";
+const TPC_VERSION = "0.5.0";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -190,13 +190,11 @@ class TilePlacerCard extends HTMLElement {
   /* --- API Lovelace --- */
 
   static getStubConfig() {
-    return {
-      type: "custom:tile-placer-card",
-      aspect_ratio: "16:9",
-      tiles: [
-        { id: "demo", x_pct: 50, y_pct: 50, icon: "mdi:lightbulb", name: "Exemple", size: 48 },
-      ],
-    };
+    return { type: "custom:tile-placer-card", tiles: [] };
+  }
+
+  static getConfigElement() {
+    return document.createElement("tile-placer-card-editor");
   }
 
   setConfig(config) {
@@ -251,24 +249,29 @@ class TilePlacerCard extends HTMLElement {
     if (this._config.title) card.setAttribute("header", String(this._config.title));
     this._card = card;
 
-    const aspect = parseAspect(this._config.aspect_ratio);
-    let stageStyle = `aspect-ratio: ${aspect}`;
-    if (this._config.fit_screen) {
-      // Carte aussi grande que possible sans dépasser la hauteur de l'écran (proportions conservées).
-      const [aw, ah] = aspect.split("/").map((n) => Number(n));
-      const off = Number.isFinite(Number(this._config.screen_offset)) ? Number(this._config.screen_offset) : 150;
-      if (aw > 0 && ah > 0) stageStyle += `; width: min(100%, calc((100vh - ${off}px) * ${aw} / ${ah})); margin: 0 auto`;
-    }
-    const stage = h("div", { class: "stage", style: stageStyle });
+    const stage = h("div", { class: "stage" });
     this._stage = stage;
+    const hasRatio = this._config.aspect_ratio !== undefined && this._config.aspect_ratio !== null && this._config.aspect_ratio !== "";
+    this._sizeStage(parseAspect(this._config.aspect_ratio));
     if (typeof this._config.background === "string" && this._config.background) {
       const img = h("img", { class: "bg", alt: "", draggable: "false" });
+      if (!hasRatio) {
+        // Sans aspect_ratio : proportions lues sur l'image elle-même.
+        img.addEventListener("load", () => {
+          if (img.naturalWidth > 0 && img.naturalHeight > 0) this._sizeStage(`${img.naturalWidth} / ${img.naturalHeight}`);
+        });
+      }
       img.src = this._config.background; // propriété DOM : pas d'injection HTML/CSS
       stage.append(img);
     }
     this._els.clear();
     for (const t of this._tiles) this._createTile(t);
-    this._emptyHint = h("div", { class: "empty", text: "Aucune bulle. Utilise le crayon puis « Nouvel appareil »." });
+    this._emptyHint = h("div", {
+      class: "empty",
+      text: this._config.background
+        ? "Aucune bulle. Utilise le crayon puis « Nouvel appareil »."
+        : "Choisis une image de fond dans les réglages de la carte, puis utilise le crayon pour ajouter des appareils.",
+    });
     stage.append(this._emptyHint);
 
     this._pencil = h("button", {
@@ -290,6 +293,17 @@ class TilePlacerCard extends HTMLElement {
     this._applyEditState();
     this._updatePencil();
     this._updateTiles();
+  }
+
+  _sizeStage(aspect) {
+    let style = `aspect-ratio: ${aspect}`;
+    if (this._config.fit_screen) {
+      // Carte aussi grande que possible sans dépasser la hauteur de l'écran (proportions conservées).
+      const [aw, ah] = aspect.split("/").map((n) => Number(n));
+      const off = Number.isFinite(Number(this._config.screen_offset)) ? Number(this._config.screen_offset) : 150;
+      if (aw > 0 && ah > 0) style += `; width: min(100%, calc((100vh - ${off}px) * ${aw} / ${ah})); margin: 0 auto`;
+    }
+    this._stage.style.cssText = style;
   }
 
   _mkIcon(icon) {
@@ -926,6 +940,81 @@ class TilePlacerCard extends HTMLElement {
       this._renderToolbar();
     }
   }
+}
+
+/* ---------- éditeur visuel de la carte (réglages généraux ; les bulles se gèrent sur le plan) ---------- */
+
+const EDITOR_LABELS = {
+  title: "Titre (facultatif)",
+  background: "Image de fond (ex. /local/plan.png)",
+  aspect_ratio: "Proportions (facultatif)",
+  fit_screen: "Agrandir à la hauteur de l'écran",
+  label_mode: "Affichage des noms",
+  editable: "Autoriser la modification sur le plan",
+};
+const EDITOR_HELPERS = {
+  background: "Place l'image dans /config/www/ : le fichier plan.png s'écrit /local/plan.png.",
+  aspect_ratio: "Laisse vide : les proportions sont lues sur l'image. Sinon, ex. 1200:896.",
+  fit_screen: "Conseillé dans une vue de type « Panneau ».",
+};
+const EDITOR_SCHEMA = [
+  { name: "title", selector: { text: {} } },
+  { name: "background", selector: { text: {} } },
+  { name: "aspect_ratio", selector: { text: {} } },
+  { name: "fit_screen", selector: { boolean: {} } },
+  {
+    name: "label_mode",
+    selector: {
+      select: {
+        mode: "dropdown",
+        options: [
+          { value: "hover", label: "Au survol" },
+          { value: "always", label: "Toujours" },
+          { value: "never", label: "Jamais" },
+        ],
+      },
+    },
+  },
+  { name: "editable", selector: { boolean: {} } },
+];
+
+class TilePlacerCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = config;
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (this._form) this._form.hass = hass;
+  }
+
+  _render() {
+    if (!this._form) {
+      const form = document.createElement("ha-form");
+      form.computeLabel = (s) => EDITOR_LABELS[s.name] || s.name;
+      form.computeHelper = (s) => EDITOR_HELPERS[s.name] || "";
+      form.addEventListener("value-changed", (ev) => {
+        const cfg = { ...this._config, ...ev.detail.value };
+        for (const k of Object.keys(cfg)) if (cfg[k] === "" || cfg[k] === undefined) delete cfg[k];
+        this._config = cfg;
+        this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: cfg }, bubbles: true, composed: true }));
+      });
+      this._form = form;
+      this.append(form);
+      this.append(h("p", {
+        style: "font-size:13px;color:var(--secondary-text-color)",
+        text: "Les bulles se placent directement sur le plan : clique sur le crayon de la carte, puis « + Nouvel appareil ».",
+      }));
+    }
+    this._form.hass = this._hass;
+    this._form.schema = EDITOR_SCHEMA;
+    this._form.data = { editable: true, label_mode: "hover", fit_screen: false, ...this._config };
+  }
+}
+
+if (!customElements.get("tile-placer-card-editor")) {
+  customElements.define("tile-placer-card-editor", TilePlacerCardEditor);
 }
 
 if (!customElements.get("tile-placer-card")) {

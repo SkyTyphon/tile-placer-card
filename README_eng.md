@@ -50,27 +50,24 @@ HACS registers the resource automatically, and updates also go through HACS.
 ### Manual
 
 1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.4.0` as a **JavaScript module**.
+2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.5.0` as a **JavaScript module**.
 3. Change the `?v=` value after each update: Home Assistant caches `/local/` for a very long time.
 
 ## Quick start
 
-1. **Prepare the plan image.** Put it in `/config/www/` (for example `plan.png`); it is then served as `/local/plan.png`. Note its dimensions: the width to height ratio must be set in `aspect_ratio`, otherwise bubbles will not land in the right places.
-2. **Create a panel view.** Edit your dashboard, add a view and choose the **Panel (single card)** view type. The card then fills the whole space.
-3. **Add the card** with this minimal YAML:
+1. **Prepare the plan image.** Put it in `/config/www/` (for example `plan.png`); it is then served as `/local/plan.png`.
+2. **Add the card without writing YAML.** Edit your dashboard, click **Add card**, search for **Tile Placer Card**. In the visual editor, set the **background image** (`/local/plan.png`) and tick **Fit to screen height**. The proportions are read from the image: nothing to calculate. For a card filling the whole screen, put it in a **Panel (single card)** view.
+3. **Save the dashboard** and leave Home Assistant's own edit mode.
+4. **Click the pencil** at the top right of the card, then **+ New device**. Pick the entity in the panel, drag the bubble into place and click **Save**.
 
-   ```yaml
-   type: custom:tile-placer-card
-   background: /local/plan.png
-   aspect_ratio: "1200:896"
-   fit_screen: true
-   tiles: []
-   ```
+The pencil is only shown to administrator accounts. The same setup in YAML:
 
-4. **Save the dashboard** and leave Home Assistant's own edit mode.
-5. **Click the pencil** at the top right of the card, then **+ New device**. Pick the entity in the panel, drag the bubble into place and click **Save**.
-
-The pencil is only shown to administrator accounts.
+```yaml
+type: custom:tile-placer-card
+background: /local/plan.png
+fit_screen: true
+tiles: []
+```
 
 ## Everyday use
 
@@ -124,7 +121,7 @@ Saving re-reads the dashboard configuration, finds this card by exact comparison
 
 ## YAML configuration
 
-The card is configured in YAML. There is no visual card editor: the YAML describes the setting, and the on-map edit mode manages the bubbles.
+General settings (image, title, proportions, name display) are set in the card's visual editor or in YAML; the on-map edit mode manages the bubbles.
 
 ```yaml
 type: custom:tile-placer-card
@@ -155,7 +152,7 @@ More examples in [`examples/basic.yaml`](examples/basic.yaml).
 | Option | Description |
 |---|---|
 | `background` | Image URL (e.g. `/local/plan.png`). Optional. It must be reachable without an authorization header, so put it in `/config/www/`. |
-| `aspect_ratio` | `16:9`, `4/3`, `1.5` or `56.25%` (default `16:9`). **Use the real ratio of your image**, otherwise positions will not match the picture. |
+| `aspect_ratio` | Optional. When omitted, the proportions are read from the background image. Otherwise `16:9`, `4/3`, `1.5` or `56.25%`; then use the real ratio of your image. With no image and no value: `16:9`. |
 | `fit_screen` | `true`: the card is as large as possible without exceeding the screen height, aspect ratio kept. Best in a panel view. |
 | `screen_offset` | Height in px removed from the screen height when `fit_screen` is on (default `150`). |
 | `label_mode` | Default name display: `hover` (default), `always`, `never`. |
@@ -215,7 +212,7 @@ hold_action:
 
 - **Big map.** Put the card alone in a **Panel** view with `fit_screen: true`. Adjust `screen_offset` if the card overflows or leaves too much margin.
 - **Background image.** A file in `/config/www/` is served as `/local/`. Do not use `/media/`: those files need an authorization that an image tag does not send.
-- **Image ratio.** Divide the file width by its height (e.g. 2400 × 1792 gives `"2400:1792"` or `"1200:896"`). A wrong value shifts every bubble.
+- **Image ratio.** Leave `aspect_ratio` empty: it is read from the image. If you set it by hand, divide the file width by its height; a wrong value shifts every bubble.
 - **Name rather than state.** For a dense view, keep `show_state: false` and `label_mode: hover`, and enable the state only on useful sensors.
 - **Several identical cards.** Add a distinguishing field such as `title` so saving knows which one to change.
 
@@ -225,7 +222,7 @@ hold_action:
 - The dashboard is deduced from the first URL segment (`/lovelace/...` = default dashboard). A card shown in another context (card editor preview, dialog) may not be able to save.
 - Saving is refused when two cards of the dashboard are exactly identical.
 - Actions are implemented inside the card (no native `handleAction`): no `confirmation`, `haptic` or `repeat`.
-- No visual card editor: configure in YAML, then use the on-map edit mode.
+- The visual editor only covers general settings; bubbles are managed on the map.
 - If `ha-icon-picker` or `ha-entity-picker` are not loaded yet (lazy Home Assistant components), the panel falls back to text fields.
 - In edit mode, mouse and touch events from bubbles are stopped from reaching swipe-navigation modules such as `hass-swipe-navigation`, otherwise a drag could change the view instead of moving the bubble.
 - Touch devices and the Companion app: not tested.
