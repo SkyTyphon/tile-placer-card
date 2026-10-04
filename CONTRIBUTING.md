@@ -4,7 +4,7 @@ Thanks for your interest! Bug reports, ideas and pull requests are welcome, in E
 
 ## Reporting a bug
 
-Open an issue with the **Bug report** form. It helps a lot to include:
+Open an issue with the **Bug report** template. It helps a lot to include:
 
 - the card version (shown in the browser console as `TILE-PLACER-CARD v…`, and in HACS);
 - your Home Assistant version and browser (or the Companion app);
@@ -15,7 +15,7 @@ Touch devices and the Companion app are not tested by the maintainer, so reports
 
 ## Suggesting a feature
 
-Open an issue with the **Feature request** form and describe the problem you want to solve rather than only the solution. The card aims to stay a single file with no build step and no dependency.
+Open an issue with the **Feature request** template and describe the problem you want to solve rather than only the solution. The card aims to stay a single file with no build step and no dependency.
 
 ## Development
 
