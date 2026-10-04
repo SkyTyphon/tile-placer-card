@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.2";
+const TPC_VERSION = "0.9.3";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -290,6 +290,7 @@ class TilePlacerCard extends HTMLElement {
       stage.append(img);
     }
     this._els.clear();
+    this._emptyHint = null; // l'ancien indicateur n'appartient plus à la nouvelle scène
     for (const t of this._tiles) this._createTile(t);
     this._emptyHint = h("div", { class: "empty", onclick: () => { if (this._canAddBackground()) this._openBackgroundDialog(); } });
     stage.append(this._emptyHint);
