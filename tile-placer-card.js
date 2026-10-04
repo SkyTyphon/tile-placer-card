@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.6.0";
+const TPC_VERSION = "0.7.0";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -167,6 +167,19 @@ button.pencil { position: absolute; top: 6px; right: 6px; z-index: 10; width: 36
 .setup { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 10; }
 .empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   color: var(--secondary-text-color); font-size: 13px; text-align: center; padding: 16px; pointer-events: none; }
+.empty.clickable { pointer-events: auto; cursor: pointer; color: var(--primary-text-color); font-size: 15px; }
+.empty.clickable:hover { background: color-mix(in srgb, var(--primary-color) 10%, transparent); }
+.bgdlg { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.45); padding: 12px; box-sizing: border-box; }
+.bgdlg .box { width: min(420px, 100%); max-height: 100%; overflow: auto; box-sizing: border-box; padding: 16px;
+  border-radius: 12px; background: var(--card-background-color, #fff); color: var(--primary-text-color); box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+.bgdlg h3 { margin: 0 0 8px; font-size: 16px; font-weight: 500; }
+.bgdlg p { margin: 6px 0; font-size: 13px; color: var(--secondary-text-color); }
+.bgdlg input[type=text] { font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--divider-color);
+  background: var(--secondary-background-color, #f5f5f5); color: var(--primary-text-color); box-sizing: border-box; width: 100%; }
+.bgdlg .rowb { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.bgdlg .status { min-height: 18px; font-size: 13px; }
+.bgdlg .status.err { color: var(--error-color); }
 `;
 
 /* ---------- carte ---------- */
@@ -267,12 +280,7 @@ class TilePlacerCard extends HTMLElement {
     }
     this._els.clear();
     for (const t of this._tiles) this._createTile(t);
-    this._emptyHint = h("div", {
-      class: "empty",
-      text: this._config.background
-        ? "Aucune bulle. Utilise le crayon puis « Nouvel appareil »."
-        : "Choisis une image de fond dans les réglages de la carte, puis utilise le crayon pour ajouter des appareils.",
-    });
+    this._emptyHint = h("div", { class: "empty", onclick: () => { if (this._canAddBackground()) this._openBackgroundDialog(); } });
     stage.append(this._emptyHint);
 
     this._setupBtn = h("button", {
@@ -414,6 +422,15 @@ class TilePlacerCard extends HTMLElement {
   _updatePencil() {
     if (!this._pencil) return;
     this._pencil.style.display = this._canEdit() && !this._editing ? "" : "none";
+    if (this._emptyHint) {
+      const noBg = !this._config.background;
+      const canBg = noBg && this._canAddBackground();
+      this._emptyHint.classList.toggle("clickable", canBg);
+      this._emptyHint.textContent = canBg
+        ? "Clique ici pour ajouter une image de fond"
+        : noBg ? "Aucune image de fond."
+          : "Aucune bulle. Utilise le crayon puis « Nouvel appareil ».";
+    }
     if (this._setupBtn) {
       // Proposé seulement sur une carte neuve (sans bulle, hors page plein écran) pour ne pas se répéter sur la page créée.
       const fresh = this._tiles.length === 0 && !this._config.fit_screen && !this._editing;
@@ -482,7 +499,7 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       onclick: () => this._save(),
     });
     save.disabled = this._saving || !this._dirty;
-    const bg = h("button", { class: "btn", type: "button", text: "Image de fond…", onclick: () => this._setBackground() });
+    const bg = h("button", { class: "btn", type: "button", text: "Image de fond…", onclick: () => this._openBackgroundDialog() });
     const cancel = h("button", { class: "btn", type: "button", text: "Annuler", onclick: () => this._cancelEdit() });
     cancel.disabled = this._saving;
     const msg = h("div", { class: "msg" + (this._msg ? " " + this._msg.kind : ""), role: "status", "aria-live": "polite" });
@@ -490,16 +507,99 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     tb.append(add, bg, save, cancel, msg);
   }
 
-  _setBackground() {
-    const cur = this._config.background || "";
-    const v = prompt("Adresse de l'image de fond (ex. /local/plan.png). Le fichier doit être dans /config/www/.", cur);
-    if (v === null) return;
-    const val = v.trim();
-    if (val === cur) return;
-    if (val) this._config.background = val;
-    else delete this._config.background;
-    this._build();
-    this._markDirty();
+  _canAddBackground() {
+    return this._canEdit() && !this._bgOpen && !this._saving;
+  }
+
+  _openBackgroundDialog() {
+    if (!this._canEdit() || this._bgOpen) return;
+    this._bgOpen = true;
+    const close = () => { this._bgOpen = false; dlg.remove(); this._updatePencil(); };
+    const status = h("div", { class: "status", role: "status", "aria-live": "polite" });
+    const say = (kind, text) => { status.className = "status" + (kind ? " " + kind : ""); status.textContent = text; };
+    const file = h("input", { type: "file", accept: "image/*", style: "display:none" });
+    const pick = h("button", { class: "btn primary", type: "button", text: "Choisir un fichier image…", onclick: () => file.click() });
+    const url = h("input", { type: "text", placeholder: "/local/plan.png", "aria-label": "Adresse de l'image" });
+    url.value = this._config.background || "";
+    const busy = (on) => { pick.disabled = on; ok.disabled = on; cancel.disabled = on; };
+    const apply = async (value) => {
+      busy(true);
+      say("", "Enregistrement…");
+      const err = await this._applyBackground(value);
+      if (err) { busy(false); say("err", err); } else close();
+    };
+    file.addEventListener("change", async () => {
+      const f = file.files && file.files[0];
+      if (!f) return;
+      busy(true);
+      say("", "Envoi de l'image…");
+      try {
+        await apply(await this._uploadImage(f));
+      } catch (e) {
+        busy(false);
+        say("err", e && e.message ? e.message : String(e));
+      }
+    });
+    const ok = h("button", { class: "btn", type: "button", text: "Valider l'adresse", onclick: () => apply(url.value) });
+    const cancel = h("button", { class: "btn", type: "button", text: "Annuler", onclick: close });
+    const dlg = h("div", { class: "bgdlg", role: "dialog", "aria-label": "Image de fond" }, [
+      h("div", { class: "box" }, [
+        h("h3", { text: "Image de fond" }),
+        h("p", { text: "Envoie le plan de ta maison (PNG, JPG…) : il est stocké dans Home Assistant et la carte s'adapte à ses proportions." }),
+        h("div", { class: "rowb" }, [pick, file]),
+        h("p", { text: "Ou indique l'adresse d'une image déjà présente (ex. /local/plan.png, fichier dans /config/www/) :" }),
+        url,
+        h("div", { class: "rowb" }, [ok, cancel]),
+        status,
+      ]),
+    ]);
+    dlg.addEventListener("pointerdown", (ev) => { ev.stopPropagation(); });
+    dlg.addEventListener("click", (ev) => { if (ev.target === dlg && !pick.disabled) close(); });
+    this._stage.append(dlg);
+  }
+
+  async _uploadImage(file) {
+    const tok = this._hass && this._hass.auth && this._hass.auth.data && this._hass.auth.data.access_token;
+    if (!tok) throw new Error("Jeton d'accès introuvable : indique plutôt l'adresse de l'image.");
+    if (file.size > 10 * 1024 * 1024) throw new Error("Image trop lourde (10 Mo maximum).");
+    const fd = new FormData();
+    fd.append("file", file);
+    let r;
+    try {
+      r = await fetch("/api/image/upload", { method: "POST", headers: { Authorization: `Bearer ${tok}` }, body: fd });
+    } catch (_) {
+      throw new Error("Envoi impossible (réseau).");
+    }
+    if (r.status === 404) throw new Error("L'intégration « Image » n'est pas active : indique plutôt l'adresse de l'image.");
+    if (!r.ok) throw new Error(`Envoi refusé (code ${r.status}).`);
+    const j = await r.json();
+    if (!j || !j.id) throw new Error("Réponse inattendue du serveur.");
+    return `/api/image/serve/${j.id}/original`;
+  }
+
+  /* Renvoie un message d'erreur, ou null si tout est bon. En mode édition, la modification attend « Enregistrer ». */
+  async _applyBackground(value) {
+    const val = String(value || "").trim();
+    if (!val) return "Indique une image.";
+    if (/^\s*(javascript|data|vbscript):/i.test(val)) return "Adresse refusée.";
+    if (this._editing) {
+      this._config.background = val;
+      this._build();
+      this._markDirty();
+      return null;
+    }
+    this._config.background = val;
+    this._dirty = true;
+    await this._save();
+    if (this._msg && this._msg.kind === "err") {
+      const text = this._msg.text;
+      this._config = JSON.parse(this._baseline);
+      this._dirty = false;
+      this._msg = null;
+      this._build();
+      return text;
+    }
+    return null;
   }
 
   _setMsg(kind, text) {
@@ -521,13 +621,6 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     this._dirty = false;
     this._msg = null;
     this._build();
-  }
-
-  _rebuildTiles() {
-    for (const e of this._els.values()) e.root.remove();
-    this._els.clear();
-    for (const t of this._tiles) this._createTile(t);
-    this._updateTiles();
   }
 
   _addTile() {
@@ -985,9 +1078,7 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       this._dirty = false;
       this._editing = false;
       this._saving = false;
-      this._rebuildTiles();
-      this._applyEditState();
-      this._updatePencil();
+      this._build();
       return;
     } catch (err) {
       this._saving = false;

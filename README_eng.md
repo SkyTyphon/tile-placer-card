@@ -50,16 +50,16 @@ HACS registers the resource automatically, and updates also go through HACS.
 ### Manual
 
 1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.6.0` as a **JavaScript module**.
+2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.7.0` as a **JavaScript module**.
 3. Change the `?v=` value after each update: Home Assistant caches `/local/` for a very long time.
 
 ## Quick start
 
-1. **Prepare the plan image.** Put it in `/config/www/` (for example `plan.png`); it is then served as `/local/plan.png`.
-2. **Add the card without writing YAML.** Edit your dashboard, click **Add card**, search for **Tile Placer Card**. In the visual editor, set the **background image** (`/local/plan.png`) and tick **Fit to screen height**. The proportions are read from the image: nothing to calculate. For a card filling the whole screen, put it in a **Panel (single card)** view.
+1. **Add the card without writing YAML.** Edit your dashboard, click **Add card**, search for **Tile Placer Card**. For a card filling the whole screen, put it in a **Panel (single card)** view.
+2. **Add your background image.** On a card with no image, click the card: a dialog offers to **upload your plan** (PNG, JPG…) from your computer. The image is stored in Home Assistant, saved in the card, and the proportions are read from the image: nothing to calculate. You can also enter the address of an image already there, for example `/local/plan.png` for a file in `/config/www/`.
 3. **Click "Créer la page « Plan » en un clic" (create the Plan page).** This button shows on a brand-new card, for administrators. It creates a **Plan** dashboard in the sidebar, with the card full screen, and takes you there: the address is `/plan-editable`. After that, one click on "Plan" in the sidebar is enough.
    (If you prefer to place the card yourself, save the dashboard and leave Home Assistant's own edit mode.)
-4. **Click the pencil** at the top right of the card, then **+ New device**. Pick the entity in the panel, drag the bubble into place and click **Save**. If the background image is not set yet, the **Image de fond…** (background image) button in the toolbar asks for it.
+4. **Click the pencil** at the top right of the card, then **+ New device**. Pick the entity in the panel, drag the bubble into place and click **Save**. The **Image de fond…** (background image) button in the toolbar lets you change the image at any time.
 
 The pencil is only shown to administrator accounts. The same setup in YAML:
 
@@ -84,7 +84,7 @@ Outside edit mode the card behaves like a normal dashboard card:
 
 ### Entering edit mode
 
-Click the **pencil**. A dashed frame and a grid appear, and a toolbar shows under the map: **+ New device**, **Image de fond…** (background image), **Save**, **Cancel** and a status message.
+Click the **pencil**. A dashed frame and a grid appear, and a toolbar shows under the map: **+ New device**, **Image de fond…** (upload or change the background image), **Save**, **Cancel** and a status message.
 
 ### Moving a bubble
 
@@ -226,6 +226,7 @@ hold_action:
 - The visual editor only covers general settings; bubbles are managed on the map.
 - If `ha-icon-picker` or `ha-entity-picker` are not loaded yet (lazy Home Assistant components), the panel falls back to text fields.
 - In edit mode, mouse and touch events from bubbles are stopped from reaching swipe-navigation modules such as `hass-swipe-navigation`, otherwise a drag could change the view instead of moving the bubble.
+- Uploading the image uses Home Assistant's "Image" integration (enabled by default). It is limited to 10 MB; otherwise enter the address of a file in `/config/www/`.
 - Touch devices and the Companion app: not tested.
 
 ## Troubleshooting

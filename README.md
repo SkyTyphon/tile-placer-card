@@ -50,16 +50,16 @@ HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 ### À la main
 
 1. Copie `tile-placer-card.js` dans `/config/www/`.
-2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.6.0` en type **Module JavaScript**.
+2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.7.0` en type **Module JavaScript**.
 3. Change la valeur de `?v=` à chaque mise à jour : Home Assistant garde `/local/` en cache très longtemps.
 
 ## Démarrage rapide
 
-1. **Prépare l'image du plan.** Mets-la dans `/config/www/` (par exemple `plan.png`). Elle sera accessible sous `/local/plan.png`.
-2. **Ajoute la carte sans écrire de YAML.** Modifie ton dashboard, clique sur **Ajouter une carte**, cherche **Tile Placer Card**. Dans l'éditeur visuel, renseigne l'**image de fond** (`/local/plan.png`) et coche **Agrandir à la hauteur de l'écran**. Les proportions sont lues sur l'image : tu n'as rien à calculer. Pour une carte qui occupe tout l'écran, mets-la dans une vue de type **Panneau (1 carte)**.
+1. **Ajoute la carte sans écrire de YAML.** Modifie ton dashboard, clique sur **Ajouter une carte**, cherche **Tile Placer Card**. Pour une carte qui occupe tout l'écran, mets-la dans une vue de type **Panneau (1 carte)**.
+2. **Ajoute ton image de fond.** Sur une carte sans image, clique sur la carte : un dialogue propose d'**envoyer le plan** (PNG, JPG…) depuis ton ordinateur. L'image est stockée dans Home Assistant, enregistrée dans la carte, et les proportions sont lues sur l'image : rien à calculer. Tu peux aussi indiquer l'adresse d'une image déjà présente, par exemple `/local/plan.png` pour un fichier de `/config/www/`.
 3. **Clique sur « Créer la page « Plan » en un clic ».** Ce bouton apparaît sur la carte neuve, pour les administrateurs. Il crée un dashboard **Plan** dans la barre latérale, avec la carte en plein écran, et t'y emmène : l'adresse est `/plan-editable`. Ensuite, un clic sur « Plan » dans la barre latérale suffit.
    (Si tu préfères placer la carte toi-même, enregistre le dashboard et quitte le mode édition de Home Assistant.)
-4. **Clique sur le crayon** en haut à droite de la carte, puis sur **+ Nouvel appareil**. Choisis l'entité dans le panneau, glisse la bulle à sa place, clique sur **Enregistrer**. Si l'image de fond n'est pas encore réglée, le bouton **Image de fond…** de la barre d'outils la demande.
+4. **Clique sur le crayon** en haut à droite de la carte, puis sur **+ Nouvel appareil**. Choisis l'entité dans le panneau, glisse la bulle à sa place, clique sur **Enregistrer**. Le bouton **Image de fond…** de la barre d'outils permet de changer l'image à tout moment.
 
 Le crayon n'apparaît que pour un compte administrateur. Le même réglage en YAML :
 
@@ -84,7 +84,7 @@ En dehors du mode édition, la carte se comporte comme un tableau de bord normal
 
 ### Entrer en mode édition
 
-Clique sur le **crayon**. Un cadre en pointillés et une grille apparaissent, et une barre d'outils s'affiche sous le plan : **+ Nouvel appareil**, **Image de fond…**, **Enregistrer**, **Annuler** et un message d'état.
+Clique sur le **crayon**. Un cadre en pointillés et une grille apparaissent, et une barre d'outils s'affiche sous le plan : **+ Nouvel appareil**, **Image de fond…** (envoyer ou changer l'image), **Enregistrer**, **Annuler** et un message d'état.
 
 ### Déplacer une bulle
 
@@ -226,6 +226,7 @@ hold_action:
 - L'éditeur visuel couvre les réglages généraux seulement ; les bulles se gèrent sur le plan.
 - Si `ha-icon-picker` ou `ha-entity-picker` ne sont pas encore chargés (composants chargés à la demande par Home Assistant), le panneau bascule sur des champs texte.
 - En mode édition, les événements souris et tactiles des bulles ne remontent pas aux modules de navigation par balayage comme `hass-swipe-navigation`, sinon un glissement changerait de vue au lieu de déplacer la bulle.
+- L'envoi de l'image utilise l'intégration Home Assistant « Image » (active par défaut). Elle est limitée à 10 Mo ; sinon, indique l'adresse d'un fichier de `/config/www/`.
 - Écrans tactiles et application Companion : non testés.
 
 ## Dépannage
