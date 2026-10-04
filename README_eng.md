@@ -52,7 +52,7 @@ HACS registers the resource automatically, and updates also go through HACS.
 ### Manual
 
 1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.8.0` as a **JavaScript module**.
+2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.8.1` as a **JavaScript module**.
 3. Change the `?v=` value after each update: Home Assistant caches `/local/` for a very long time.
 
 ## Quick start

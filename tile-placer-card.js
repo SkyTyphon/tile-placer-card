@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.8.0";
+const TPC_VERSION = "0.8.1";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -683,6 +683,18 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
   }
 
   async _renderPanel() {
+    try {
+      await this._renderPanelInner();
+    } catch (err) {
+      console.error("tile-placer-card: panneau", err);
+      if (this._panel) {
+        this._panel.style.display = "block";
+        this._panel.replaceChildren(h("div", { class: "err", text: "Erreur du panneau : " + (err && err.message ? err.message : String(err)) }));
+      }
+    }
+  }
+
+  async _renderPanelInner() {
     const panel = this._panel;
     if (!panel) return;
     const tile = this._tiles.find((t) => t.id === this._selectedId);
@@ -890,6 +902,15 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
   }
 
   _deviceList() {
+    try {
+      return this._deviceListUnsafe();
+    } catch (err) {
+      console.warn("tile-placer-card: liste des appareils indisponible", err);
+      return [];
+    }
+  }
+
+  _deviceListUnsafe() {
     const hass = this._hass;
     if (!hass || !hass.devices || !hass.entities) return [];
     const withEntity = new Set();
