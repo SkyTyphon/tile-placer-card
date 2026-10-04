@@ -52,7 +52,7 @@ HACS registers the resource automatically, and updates also go through HACS.
 ### Manual
 
 1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.8.2` as a **JavaScript module**.
+2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.9.0` as a **JavaScript module**.
 3. Change the `?v=` value after each update: Home Assistant caches `/local/` for a very long time.
 
 ## Quick start
@@ -166,6 +166,8 @@ More examples in [`examples/basic.yaml`](examples/basic.yaml).
 | `label_mode` | Default name display: `hover` (default), `always`, `never`. |
 | `title` | Card title. Optional. |
 | `editable` | `false` hides the pencil (default `true`). Editing also requires an administrator account. |
+| `switch_path` | Address of another plan (e.g. `/dashboard-maison/0`). Adds a button at the top left to switch to it. Optional. |
+| `switch_label` | Text of the switch button. Optional. |
 | `tiles` | List of bubbles. |
 
 ### Bubble options
@@ -217,6 +219,32 @@ hold_action:
     entity_id: light.living_room
     brightness_pct: 100
 ```
+
+## Switching between an old plan and this card
+
+If you already have a `picture-elements` plan and want to move between the two, link them with a button in each direction. Only the **last part of the address** depends on your dashboard (`/dashboard-maison/0`, `/energy/plan`…): take your page's address from the browser bar.
+
+- **From this card to the other plan**: set `switch_path` (the "Lien vers un autre plan" field of the visual editor):
+
+  ```yaml
+  type: custom:tile-placer-card
+  switch_path: /dashboard-maison/0
+  switch_label: Old plan
+  ```
+
+- **From the `picture-elements` to this card**: add this element to the `picture-elements` card, with the address of the Tile Placer Card page:
+
+  ```yaml
+  - type: icon
+    icon: mdi:pencil-ruler
+    title: Editable plan
+    style:
+      top: 4%
+      left: 3%
+    tap_action:
+      action: navigate
+      navigation_path: /dashboard-maison/plan-editable
+  ```
 
 ## Tips
 

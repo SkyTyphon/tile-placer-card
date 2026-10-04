@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.8.2";
+const TPC_VERSION = "0.9.0";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -169,6 +169,9 @@ button.btn { font: inherit; cursor: pointer; padding: 6px 14px; border-radius: 8
 button.btn.primary { background: var(--primary-color); color: var(--text-primary-color, #fff); border-color: var(--primary-color); }
 button.btn:disabled { opacity: .5; cursor: default; }
 button.btn:focus-visible, button.pencil:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+button.switch { position: absolute; top: 6px; left: 6px; z-index: 10; height: 36px; border-radius: 18px; padding: 0 12px 0 8px;
+  border: 1px solid var(--divider-color); background: color-mix(in srgb, var(--card-background-color, #fff) 85%, transparent);
+  color: var(--primary-text-color); cursor: pointer; display: flex; align-items: center; gap: 4px; font: inherit; font-size: 13px; }
 button.pencil { position: absolute; top: 6px; right: 6px; z-index: 10; width: 36px; height: 36px; border-radius: 50%;
   border: 1px solid var(--divider-color); background: color-mix(in srgb, var(--card-background-color, #fff) 85%, transparent);
   color: var(--primary-text-color); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
@@ -305,13 +308,23 @@ class TilePlacerCard extends HTMLElement {
     this._pencil.append(this._mkIcon("mdi:pencil"));
     this._pencil.style.display = "none";
 
+    // Bouton de bascule vers un autre plan (ex. l'ancien picture-elements) : adresse libre, réglée par l'utilisateur.
+    this._switchBtn = h("button", {
+      class: "switch", type: "button",
+      title: this._config.switch_label || "Autre plan", "aria-label": this._config.switch_label || "Autre plan",
+      onclick: () => this._goSwitch(),
+    });
+    this._switchBtn.append(this._mkIcon("mdi:swap-horizontal"));
+    if (this._config.switch_label) this._switchBtn.append(document.createTextNode(String(this._config.switch_label)));
+    this._switchBtn.style.display = "none";
+
     this._toolbar = h("div", { class: "toolbar", style: "display:none", role: "toolbar" });
     this._panel = h("div", { class: "panel" });
     stage.addEventListener("pointerdown", (ev) => {
       if (this._editing && ev.target === stage) this._select(null);
     });
     stage.append(this._panel);
-    card.append(stage, this._pencil, this._toolbar);
+    card.append(stage, this._pencil, this._switchBtn, this._toolbar);
     root.append(card);
     this._built = true;
     this._applyEditState();
@@ -436,6 +449,10 @@ class TilePlacerCard extends HTMLElement {
   _updatePencil() {
     if (!this._pencil) return;
     this._pencil.style.display = this._canEdit() && !this._editing ? "" : "none";
+    if (this._switchBtn) {
+      const p = this._config.switch_path;
+      this._switchBtn.style.display = typeof p === "string" && p.startsWith("/") && !this._editing ? "" : "none";
+    }
     if (this._emptyHint) {
       const noBg = !this._config.background;
       const canBg = noBg && this._canAddBackground();
@@ -450,6 +467,13 @@ class TilePlacerCard extends HTMLElement {
       const fresh = this._tiles.length === 0 && !this._config.fit_screen && !this._editing;
       this._setupBtn.style.display = fresh && this._canEdit() ? "" : "none";
     }
+  }
+
+  _goSwitch() {
+    const p = this._config.switch_path;
+    if (typeof p !== "string" || !p.startsWith("/") || p.startsWith("//")) return;
+    history.pushState(null, "", p);
+    window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
   }
 
   /* --- création de la page « Plan » en un clic --- */
@@ -1270,11 +1294,14 @@ const EDITOR_LABELS = {
   fit_screen: "Agrandir à la hauteur de l'écran",
   label_mode: "Affichage des noms",
   editable: "Autoriser la modification sur le plan",
+  switch_path: "Lien vers un autre plan (facultatif)",
+  switch_label: "Texte du bouton (facultatif)",
 };
 const EDITOR_HELPERS = {
   background: "Place l'image dans /config/www/ : le fichier plan.png s'écrit /local/plan.png.",
   aspect_ratio: "Laisse vide : les proportions sont lues sur l'image. Sinon, ex. 1200:896.",
   fit_screen: "Conseillé dans une vue de type « Panneau ».",
+  switch_path: "Ajoute un bouton en haut à gauche. Ex. /dashboard-maison/0 : seul le dernier mot de l'adresse change selon ton dashboard.",
 };
 const EDITOR_SCHEMA = [
   { name: "title", selector: { text: {} } },
@@ -1295,6 +1322,8 @@ const EDITOR_SCHEMA = [
     },
   },
   { name: "editable", selector: { boolean: {} } },
+  { name: "switch_path", selector: { text: {} } },
+  { name: "switch_label", selector: { text: {} } },
 ];
 
 class TilePlacerCardEditor extends HTMLElement {

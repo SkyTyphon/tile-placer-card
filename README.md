@@ -52,7 +52,7 @@ HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 ### À la main
 
 1. Copie `tile-placer-card.js` dans `/config/www/`.
-2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.8.2` en type **Module JavaScript**.
+2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.9.0` en type **Module JavaScript**.
 3. Change la valeur de `?v=` à chaque mise à jour : Home Assistant garde `/local/` en cache très longtemps.
 
 ## Démarrage rapide
@@ -166,6 +166,8 @@ D'autres exemples sont dans [`examples/basic.yaml`](examples/basic.yaml).
 | `label_mode` | Affichage du nom par défaut : `hover` (défaut), `always`, `never`. |
 | `title` | Titre de la carte. Facultatif. |
 | `editable` | `false` masque le crayon (défaut `true`). Le mode édition exige de toute façon un compte administrateur. |
+| `switch_path` | Adresse d'un autre plan (ex. `/dashboard-maison/0`). Ajoute un bouton en haut à gauche pour y basculer. Facultatif. |
+| `switch_label` | Texte du bouton de bascule. Facultatif. |
 | `tiles` | Liste des bulles. |
 
 ### Options d'une bulle
@@ -217,6 +219,32 @@ hold_action:
     entity_id: light.salon
     brightness_pct: 100
 ```
+
+## Basculer entre un ancien plan et cette carte
+
+Si tu as déjà un plan en `picture-elements` et que tu veux passer de l'un à l'autre, relie-les par un bouton dans chaque sens. Seul le **dernier mot de l'adresse** change selon ton dashboard (`/dashboard-maison/0`, `/energy/plan`…) : prends l'adresse de ta page dans la barre du navigateur.
+
+- **Depuis cette carte vers l'autre plan** : renseigne `switch_path` (champ « Lien vers un autre plan » de l'éditeur visuel) :
+
+  ```yaml
+  type: custom:tile-placer-card
+  switch_path: /dashboard-maison/0
+  switch_label: Ancien plan
+  ```
+
+- **Depuis le `picture-elements` vers cette carte** : ajoute cet élément dans la carte `picture-elements`, avec l'adresse de la page de Tile Placer Card :
+
+  ```yaml
+  - type: icon
+    icon: mdi:pencil-ruler
+    title: Plan éditable
+    style:
+      top: 4%
+      left: 3%
+    tap_action:
+      action: navigate
+      navigation_path: /dashboard-maison/plan-editable
+  ```
 
 ## Conseils
 
