@@ -1,0 +1,247 @@
+# Tile Placer Card
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+
+[Français](https://github.com/SkyTyphon/tile-placer-card/blob/main/README.md) · **English**
+
+A Lovelace card (plain JavaScript, single file, no build, no dependency) that places **bubbles** (MDI icon, name, optional entity state) on a **background image**, for example your house floor plan. Bubbles are positioned in percent, dragged **directly on the map** with a mouse or a finger, and configured one by one (name, icon, entity, size, colour, tap / double tap / hold actions) from a panel that opens on the map. Changes are saved back into the dashboard.
+
+Inspired by the HA Views add-on, but delivered as a card.
+
+![Illustration of Tile Placer Card](docs/preview.svg)
+
+*Illustration of the layout (not a screenshot): bubbles on a plan, a selected bubble and its panel.*
+
+> **Status:** `0.x`. Used on the author's own Home Assistant instance, in a desktop browser: dragging, selection panel, full-screen panel view, click actions and "New device" all work. Touch devices and the Companion app are **not tested**. See [Known limitations](#known-limitations).
+
+## Contents
+
+1. [Installation](#installation)
+2. [Quick start](#quick-start)
+3. [Everyday use](#everyday-use)
+4. [Editing the map](#editing-the-map)
+5. [YAML configuration](#yaml-configuration)
+6. [Actions](#actions)
+7. [Tips](#tips)
+8. [Known limitations](#known-limitations)
+9. [Troubleshooting](#troubleshooting)
+10. [Development](#development)
+
+## Installation
+
+### HACS (custom repository)
+
+1. In HACS, open the ⋮ menu, then **Custom repositories**.
+2. Repository: `https://github.com/SkyTyphon/tile-placer-card`, type **Dashboard** (Lovelace).
+3. Install **Tile Placer Card**, then reload the browser with Ctrl+F5.
+
+HACS registers the resource automatically, and updates also go through HACS.
+
+### Manual
+
+1. Copy `tile-placer-card.js` to `/config/www/`.
+2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.4.0` as a **JavaScript module**.
+3. Change the `?v=` value after each update: Home Assistant caches `/local/` for a very long time.
+
+## Quick start
+
+1. **Prepare the plan image.** Put it in `/config/www/` (for example `plan.png`); it is then served as `/local/plan.png`. Note its dimensions: the width to height ratio must be set in `aspect_ratio`, otherwise bubbles will not land in the right places.
+2. **Create a panel view.** Edit your dashboard, add a view and choose the **Panel (single card)** view type. The card then fills the whole space.
+3. **Add the card** with this minimal YAML:
+
+   ```yaml
+   type: custom:tile-placer-card
+   background: /local/plan.png
+   aspect_ratio: "1200:896"
+   fit_screen: true
+   tiles: []
+   ```
+
+4. **Save the dashboard** and leave Home Assistant's own edit mode.
+5. **Click the pencil** at the top right of the card, then **+ New device**. Pick the entity in the panel, drag the bubble into place and click **Save**.
+
+The pencil is only shown to administrator accounts.
+
+## Everyday use
+
+Outside edit mode the card behaves like a normal dashboard card:
+
+- **Tap**: runs the tap action. With no setting, a bubble linked to an entity opens the "more info" dialog.
+- **Double tap**: runs the double tap action, when defined. In that case the single tap is delayed by 250 ms so the two can be told apart.
+- **Hold**: runs the hold action (500 ms), when defined.
+- **Hover**: the bubble name is shown (depending on the "Name display" setting).
+- A bubble whose entity is active (on, open, running…) takes the accent colour or the chosen colour. A bubble whose entity is unavailable or missing is dimmed with a dashed outline.
+
+## Editing the map
+
+### Entering edit mode
+
+Click the **pencil**. A dashed frame and a grid appear, and a toolbar shows under the map: **+ New device**, **Save**, **Cancel** and a status message.
+
+### Moving a bubble
+
+Drag the bubble with the mouse or a finger. With a bubble focused or selected, arrow keys move it by 1 %, Shift + arrows by 5 %.
+
+### Creating a device
+
+Click **+ New device**. A 36 px bubble appears near the centre, on a free spot so it does not stack on another one, and its panel opens. Pick the entity: the entity icon is used until you choose one yourself. Then drag the bubble into place.
+
+### Configuring a bubble
+
+Click a bubble to select it: a floating panel opens on the map and every change is shown **live** on the card.
+
+| Setting | Effect |
+|---|---|
+| Name | Displayed text. With no name, the entity name is used. |
+| Icon | MDI icon. With no icon, the entity icon is used. |
+| Entity | Linked entity (state, more info, toggle…). |
+| Name display | On hover and selection, always, or never. |
+| Size | Bubble diameter, 20 to 120 px. |
+| Icon colour | CSS colour, theme variable, or colour picker. |
+| Show state under the bubble | Adds the entity state under the bubble. |
+| Transparent background | Icon only, no background disc. |
+| Actions | Tap, double tap, hold (see [Actions](#actions)). |
+| Delete bubble | Removes the bubble after confirmation. |
+
+Clicking an empty area of the map deselects the bubble.
+
+### Saving or cancelling
+
+- **Save** writes the bubbles into the dashboard and leaves edit mode. The button is only enabled when there are changes.
+- **Cancel** discards unsaved changes, after confirmation.
+
+Saving re-reads the dashboard configuration, finds this card by exact comparison with the configuration it was loaded with, replaces its `tiles` list and saves. If the card changed elsewhere in the meantime, or if the dashboard is in YAML mode, an error is shown and **nothing is written**. Back up your dashboard before the first save.
+
+## YAML configuration
+
+The card is configured in YAML. There is no visual card editor: the YAML describes the setting, and the on-map edit mode manages the bubbles.
+
+```yaml
+type: custom:tile-placer-card
+title: Ground floor
+background: /local/plan.png
+aspect_ratio: "1200:896"
+fit_screen: true
+label_mode: hover
+tiles:
+  - id: living
+    x_pct: 30
+    y_pct: 45
+    icon: mdi:ceiling-light
+    entity: light.living_room
+    name: Living room
+    size: 40
+    color: "#ffa500"
+    tap_action:
+      action: toggle
+    double_tap_action:
+      action: more-info
+```
+
+More examples in [`examples/basic.yaml`](examples/basic.yaml).
+
+### Card options
+
+| Option | Description |
+|---|---|
+| `background` | Image URL (e.g. `/local/plan.png`). Optional. It must be reachable without an authorization header, so put it in `/config/www/`. |
+| `aspect_ratio` | `16:9`, `4/3`, `1.5` or `56.25%` (default `16:9`). **Use the real ratio of your image**, otherwise positions will not match the picture. |
+| `fit_screen` | `true`: the card is as large as possible without exceeding the screen height, aspect ratio kept. Best in a panel view. |
+| `screen_offset` | Height in px removed from the screen height when `fit_screen` is on (default `150`). |
+| `label_mode` | Default name display: `hover` (default), `always`, `never`. |
+| `title` | Card title. Optional. |
+| `editable` | `false` hides the pencil (default `true`). Editing also requires an administrator account. |
+| `tiles` | List of bubbles. |
+
+### Bubble options
+
+| Option | Description |
+|---|---|
+| `id` | Unique id (generated when missing). |
+| `x_pct`, `y_pct` | Centre of the bubble, 0 to 100 % of the card. |
+| `icon` | MDI icon. When empty, the entity icon is used. |
+| `entity` | Linked entity. Optional. |
+| `name` | Displayed name. Falls back to the entity friendly name. |
+| `size` | Bubble diameter in px (default 48). |
+| `color` | Any CSS colour or variable, applied to the icon. |
+| `label_mode` | `hover`, `always` or `never` for this bubble. |
+| `show_state` | `true` shows the entity state under the bubble (default `false`). |
+| `transparent` | `true`: icon only, no background. |
+| `tap_action`, `double_tap_action`, `hold_action` | See [Actions](#actions). |
+
+Coordinates are computed as `x_pct = (x + width/2) / image_width × 100`, and the same for `y_pct` with the height.
+
+## Actions
+
+Each bubble accepts three actions: `tap_action`, `double_tap_action` and `hold_action`.
+
+| Action | Purpose | Fields |
+|---|---|---|
+| `none` | Does nothing. | |
+| `more-info` | Opens the entity "more info" dialog. | `entity` (optional, defaults to the bubble's) |
+| `toggle` | Toggles the entity. | `entity` (optional) |
+| `call-service` | Calls a service (`perform_action` is accepted as a synonym of `service`). | `service` (`domain.service`), `data`, `target` |
+| `navigate` | Goes to a dashboard page. | `navigation_path`, `navigation_replace` |
+| `url` | Opens an address in a new tab. | `url_path` (`javascript:`, `data:` and `vbscript:` are refused) |
+
+Rules:
+
+- With no `tap_action`, a bubble linked to an entity opens "more info". In the panel this is called "Default". Choosing "None" forces no action instead.
+- With no `double_tap_action` or `hold_action`, those gestures do nothing.
+- In the edit panel, actions apply **live** as soon as they are complete. An incomplete action (service without `domain.service`, invalid JSON, missing path or URL) shows "Not applied yet" and is not written.
+
+Example of a service call on hold:
+
+```yaml
+hold_action:
+  action: call-service
+  service: light.turn_on
+  data:
+    entity_id: light.living_room
+    brightness_pct: 100
+```
+
+## Tips
+
+- **Big map.** Put the card alone in a **Panel** view with `fit_screen: true`. Adjust `screen_offset` if the card overflows or leaves too much margin.
+- **Background image.** A file in `/config/www/` is served as `/local/`. Do not use `/media/`: those files need an authorization that an image tag does not send.
+- **Image ratio.** Divide the file width by its height (e.g. 2400 × 1792 gives `"2400:1792"` or `"1200:896"`). A wrong value shifts every bubble.
+- **Name rather than state.** For a dense view, keep `show_state: false` and `label_mode: hover`, and enable the state only on useful sensors.
+- **Several identical cards.** Add a distinguishing field such as `title` so saving knows which one to change.
+
+## Known limitations
+
+- Saving works **only** for dashboards in storage mode (edited from the UI), not YAML dashboards.
+- The dashboard is deduced from the first URL segment (`/lovelace/...` = default dashboard). A card shown in another context (card editor preview, dialog) may not be able to save.
+- Saving is refused when two cards of the dashboard are exactly identical.
+- Actions are implemented inside the card (no native `handleAction`): no `confirmation`, `haptic` or `repeat`.
+- No visual card editor: configure in YAML, then use the on-map edit mode.
+- If `ha-icon-picker` or `ha-entity-picker` are not loaded yet (lazy Home Assistant components), the panel falls back to text fields.
+- In edit mode, mouse and touch events from bubbles are stopped from reaching swipe-navigation modules such as `hass-swipe-navigation`, otherwise a drag could change the view instead of moving the bubble.
+- Touch devices and the Companion app: not tested.
+
+## Troubleshooting
+
+- **"Custom element doesn't exist" or empty card.** The resource is not loaded. Check Settings, Dashboards, Resources, then press Ctrl+F5.
+- **Bubbles are not in the right place.** `aspect_ratio` does not match the real ratio of the image.
+- **No pencil.** The account is not an administrator, or `editable: false` is set.
+- **"Écart détecté" (drift) when saving.** The card changed in the dashboard since the page loaded. Reload the page and redo your changes.
+- **Cannot drag a bubble.** A swipe module may be capturing the gesture. Check that you are in edit mode (dashed frame).
+- **Background image does not show.** The file is not in `/config/www/` or the address is wrong. Try `/local/plan.png` in the browser.
+- **An action does not respond.** Reopen the bubble panel: a "Not applied yet" message points to the field to fix. Remember to save afterwards.
+
+Note: the card's interface and messages are currently in French.
+
+## Development
+
+No build step. Check the syntax with:
+
+```bash
+node --check tile-placer-card.js
+```
+
+To publish a version: bump `TPC_VERSION`, create a GitHub release containing `tile-placer-card.js`, then update in HACS.
+
+## License
+
+MIT

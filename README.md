@@ -2,140 +2,243 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
-A Lovelace card (plain JavaScript, single file, no build, no dependency) that places **tiles** (MDI icon + label +
-optional entity state) on a **background image** — a floor plan, for instance. Tiles are positioned in percent,
-dragged around **directly on the map**, and configured one by one (icon, entity, name, size, colour, tap / double tap /
-hold actions) from a panel that opens on the map. Changes are saved back into the dashboard.
+**Français** · [English version](https://github.com/SkyTyphon/tile-placer-card/blob/main/README_eng.md)
 
-Inspired by the HA Views add-on, but delivered as a card.
+Carte Lovelace (JavaScript natif, un seul fichier, sans build, sans dépendance) qui pose des **bulles** (icône MDI, nom, état d'une entité) sur une **image de fond**, par exemple le plan de ta maison. Les bulles se placent en pourcentage, se déplacent **directement sur la carte** à la souris ou au doigt, et se configurent une par une (nom, icône, entité, taille, couleur, actions au clic, au double clic et à l'appui long) dans un panneau qui s'ouvre sur le plan. Les modifications sont enregistrées dans le dashboard.
 
-![Illustration of Tile Placer Card](docs/preview.svg)
+Elle s'inspire de l'add-on HA Views, mais elle est livrée sous forme de carte.
 
-*Illustration of the layout (not a screenshot): bubbles on a plan, a selected bubble and its panel.*
+![Illustration de Tile Placer Card](docs/preview.svg)
 
-> **Status:** `0.x`. Used on the author's own Home Assistant instance (desktop browser): drag and drop, selection
-> panel, full-screen panel view. Touch devices and the Companion app are **not tested**. See [Known limitations](#known-limitations).
+*Illustration de la disposition (pas une capture d'écran) : des bulles sur un plan, une bulle sélectionnée et son panneau.*
+
+> **État :** version `0.x`. Utilisée sur l'instance Home Assistant de l'auteur, dans un navigateur de bureau : déplacement, panneau de sélection, vue plein écran, actions au clic et nouvel appareil fonctionnent. Les écrans tactiles et l'application Companion ne sont **pas testés**. Voir [Limites connues](#limites-connues).
+
+## Sommaire
+
+1. [Installation](#installation)
+2. [Démarrage rapide](#démarrage-rapide)
+3. [Utiliser la carte au quotidien](#utiliser-la-carte-au-quotidien)
+4. [Modifier le plan](#modifier-le-plan)
+5. [Configuration YAML](#configuration-yaml)
+6. [Actions](#actions)
+7. [Conseils](#conseils)
+8. [Limites connues](#limites-connues)
+9. [Dépannage](#dépannage)
+10. [Développement](#développement)
 
 ## Installation
 
-### HACS (custom repository)
+### Avec HACS (dépôt personnalisé)
 
-1. HACS → ⋮ → **Custom repositories**.
-2. Repository: `https://github.com/SkyTyphon/tile-placer-card`, type **Dashboard** (Lovelace).
-3. Install **Tile Placer Card**, then reload the browser (Ctrl+F5).
+1. Dans HACS, ouvre le menu ⋮ puis **Dépôts personnalisés**.
+2. Dépôt : `https://github.com/SkyTyphon/tile-placer-card`, type **Tableau de bord** (Lovelace).
+3. Installe **Tile Placer Card**, puis recharge le navigateur avec Ctrl+F5.
 
-HACS registers the resource automatically.
+HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 
-### Manual
+### À la main
 
-1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Settings → Dashboards → ⋮ → **Resources** → add `/local/tile-placer-card.js?v=0.4.0`, type **JavaScript module**.
-3. Bump the `?v=` value after each update (Home Assistant caches `/local/` for a long time).
+1. Copie `tile-placer-card.js` dans `/config/www/`.
+2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.4.0` en type **Module JavaScript**.
+3. Change la valeur de `?v=` à chaque mise à jour : Home Assistant garde `/local/` en cache très longtemps.
 
-## Configuration
+## Démarrage rapide
+
+1. **Prépare l'image du plan.** Mets-la dans `/config/www/` (par exemple `plan.png`). Elle sera accessible sous `/local/plan.png`. Note ses dimensions : le rapport largeur sur hauteur doit être renseigné dans `aspect_ratio`, sinon les bulles ne tomberont pas aux bons endroits.
+2. **Crée une vue en mode Panneau.** Modifie ton dashboard, ajoute une vue, choisis le type de vue **Panneau (1 carte)**. La carte occupe alors tout l'espace.
+3. **Ajoute la carte** avec ce YAML minimal :
+
+   ```yaml
+   type: custom:tile-placer-card
+   background: /local/plan.png
+   aspect_ratio: "1200:896"
+   fit_screen: true
+   tiles: []
+   ```
+
+4. **Enregistre le dashboard** et quitte le mode édition de Home Assistant.
+5. **Clique sur le crayon** en haut à droite de la carte, puis sur **+ Nouvel appareil**. Choisis l'entité dans le panneau, glisse la bulle à sa place, clique sur **Enregistrer**.
+
+Le crayon n'apparaît que pour un compte administrateur.
+
+## Utiliser la carte au quotidien
+
+En dehors du mode édition, la carte se comporte comme un tableau de bord normal :
+
+- **Clic** : action au clic. Sans réglage, une bulle liée à une entité ouvre la fenêtre « plus d'infos ».
+- **Double clic** : action au double clic, si elle est définie. Dans ce cas, le clic simple est retardé de 250 ms pour distinguer les deux.
+- **Appui long** : action à l'appui long (500 ms), si elle est définie.
+- **Survol** : le nom de la bulle s'affiche (selon le réglage « Affichage du nom »).
+- Une bulle dont l'entité est active (allumée, ouverte, en cours…) prend la couleur d'accent ou la couleur choisie. Une bulle dont l'entité est indisponible ou introuvable est grisée avec un contour en pointillés.
+
+## Modifier le plan
+
+### Entrer en mode édition
+
+Clique sur le **crayon**. Un cadre en pointillés et une grille apparaissent, et une barre d'outils s'affiche sous le plan : **+ Nouvel appareil**, **Enregistrer**, **Annuler** et un message d'état.
+
+### Déplacer une bulle
+
+Glisse la bulle avec la souris ou le doigt. Avec une bulle qui a le focus, les flèches la déplacent de 1 %, et Maj + flèches de 5 %.
+
+### Créer un appareil
+
+Clique sur **+ Nouvel appareil**. Une bulle de 36 px apparaît près du centre, sur un emplacement libre pour ne pas se superposer à une autre, et son panneau s'ouvre. Choisis l'entité : l'icône de l'entité est utilisée tant que tu n'en choisis pas une toi-même. Glisse ensuite la bulle à sa place.
+
+### Régler une bulle
+
+Clique sur une bulle pour la sélectionner : un panneau flottant s'ouvre sur le plan et chaque changement se voit **en direct** sur la carte.
+
+| Réglage | Effet |
+|---|---|
+| Nom | Texte affiché. Sans nom, c'est le nom de l'entité. |
+| Icône | Icône MDI. Sans icône, c'est celle de l'entité. |
+| Entité | Entité liée (état, plus d'infos, bascule…). |
+| Affichage du nom | Au survol et à la sélection, toujours, ou jamais. |
+| Taille | Diamètre de la bulle, de 20 à 120 px. |
+| Couleur de l'icône | Couleur CSS, variable de thème, ou sélecteur de couleur. |
+| Afficher l'état sous la bulle | Ajoute l'état de l'entité sous la bulle. |
+| Fond transparent | Icône seule, sans disque de fond. |
+| Actions | Clic, double clic, appui long (voir [Actions](#actions)). |
+| Supprimer la bulle | Retire la bulle après confirmation. |
+
+Un clic sur une zone vide du plan désélectionne la bulle.
+
+### Enregistrer ou annuler
+
+- **Enregistrer** écrit les bulles dans le dashboard puis quitte le mode édition. Le bouton n'est actif que s'il y a des modifications.
+- **Annuler** abandonne les modifications non enregistrées, après confirmation.
+
+L'enregistrement relit la configuration du dashboard, retrouve cette carte par comparaison exacte avec la configuration chargée au départ, remplace sa liste `tiles` et enregistre. Si la carte a été modifiée ailleurs entre-temps, ou si le dashboard est en mode YAML, une erreur s'affiche et **rien n'est écrit**. Sauvegarde ton dashboard avant le premier enregistrement.
+
+## Configuration YAML
+
+La carte se configure en YAML. Il n'y a pas d'éditeur visuel de la carte : le YAML décrit le décor, et le mode édition sur le plan gère les bulles.
 
 ```yaml
 type: custom:tile-placer-card
+title: Rez-de-chaussée
 background: /local/plan.png
 aspect_ratio: "1200:896"
 fit_screen: true
+label_mode: hover
 tiles:
-  - id: living
+  - id: salon
     x_pct: 30
     y_pct: 45
     icon: mdi:ceiling-light
-    entity: light.living_room
-    name: Living room
+    entity: light.salon
+    name: Salon
+    size: 40
+    color: "#ffa500"
+    tap_action:
+      action: toggle
+    double_tap_action:
+      action: more-info
 ```
 
-More in [`examples/basic.yaml`](examples/basic.yaml).
+D'autres exemples sont dans [`examples/basic.yaml`](examples/basic.yaml).
 
-### Card options
-
-| Option | Description |
-|---|---|
-| `background` | Image URL (e.g. `/local/plan.png`). Optional. Must be reachable without an authorization header, so put it in `/config/www/`. |
-| `aspect_ratio` | `16:9`, `4/3`, `1.5` or `56.25%` (default `16:9`). **Use the real ratio of your image**, otherwise tile positions will not match the picture. |
-| `fit_screen` | `true`: the card is as large as possible without exceeding the screen height (aspect ratio kept). Best in a `panel` view. |
-| `screen_offset` | Height in px removed from the screen height when `fit_screen` is on (default `150`). |
-| `label_mode` | Default label display: `hover` (default), `always`, `never`. |
-| `title` | Optional card title. |
-| `editable` | `false` hides the pencil (default `true`). Editing also requires an administrator account. |
-| `tiles` | List of tiles. |
-
-### Tile options
+### Options de la carte
 
 | Option | Description |
 |---|---|
-| `id` | Unique id (generated when missing). |
-| `x_pct`, `y_pct` | Centre of the tile, 0–100 % of the card. |
-| `icon` | MDI icon. When empty, the entity icon is used. |
-| `entity` | Optional entity (state, `more-info`, toggle…). |
-| `name` | Label. Falls back to the entity friendly name. |
-| `size` | Bubble diameter in px (default 48). |
-| `color` | Any CSS colour or variable, applied to the icon. |
-| `label_mode` | `hover`, `always` or `never` for this tile. |
-| `show_state` | `true` shows the entity state under the bubble (default `false`). |
-| `transparent` | `true`: icon only, no bubble background. |
-| `tap_action`, `double_tap_action`, `hold_action` | See below. |
+| `background` | URL de l'image (ex. `/local/plan.png`). Facultatif. Elle doit être accessible sans en-tête d'autorisation : place-la dans `/config/www/`. |
+| `aspect_ratio` | `16:9`, `4/3`, `1.5` ou `56.25%` (défaut `16:9`). **Utilise le vrai rapport de ton image**, sinon les positions ne correspondent pas au dessin. |
+| `fit_screen` | `true` : la carte est aussi grande que possible sans dépasser la hauteur de l'écran, proportions conservées. Idéal dans une vue Panneau. |
+| `screen_offset` | Hauteur en px retirée de la hauteur d'écran quand `fit_screen` est actif (défaut `150`). |
+| `label_mode` | Affichage du nom par défaut : `hover` (défaut), `always`, `never`. |
+| `title` | Titre de la carte. Facultatif. |
+| `editable` | `false` masque le crayon (défaut `true`). Le mode édition exige de toute façon un compte administrateur. |
+| `tiles` | Liste des bulles. |
 
-Actions: `none`, `more-info`, `toggle`, `call-service` (`service` or `perform_action`, `data`, `target`), `navigate`
-(`navigation_path`), `url` (`url_path`; `javascript:`, `data:` and `vbscript:` are refused).
-Default tap action: `more-info` when an entity is set. With a double tap action, the single tap is delayed by 250 ms.
-Hold = 500 ms.
+### Options d'une bulle
 
-## Editing
+| Option | Description |
+|---|---|
+| `id` | Identifiant unique (généré s'il manque). |
+| `x_pct`, `y_pct` | Centre de la bulle, de 0 à 100 % de la carte. |
+| `icon` | Icône MDI. Vide : icône de l'entité. |
+| `entity` | Entité liée. Facultatif. |
+| `name` | Nom affiché. Sans nom : nom convivial de l'entité. |
+| `size` | Diamètre de la bulle en px (défaut 48). |
+| `color` | Couleur CSS ou variable, appliquée à l'icône. |
+| `label_mode` | `hover`, `always` ou `never` pour cette bulle. |
+| `show_state` | `true` affiche l'état de l'entité sous la bulle (défaut `false`). |
+| `transparent` | `true` : icône seule, sans fond. |
+| `tap_action`, `double_tap_action`, `hold_action` | Voir [Actions](#actions). |
 
-1. Click the **pencil** (top right of the card, administrators only). A dashed frame and a grid appear.
-2. **Drag** a tile, with mouse or finger. Arrow keys move the selected tile by 1 %, Shift + arrows by 5 %.
-3. **Click** a tile to select it: a panel opens over the map with live preview — name, icon, entity, label display,
-   size, colour, state, transparent background, delete. Actions apply live as soon as they are valid; "Default" on tap keeps the more-info behaviour.
-4. Click on empty space to deselect. **+ New device** creates a bubble near the centre and selects it (pick its entity and icon in the panel).
-5. **Save** writes the tiles into the dashboard; **Cancel** discards the changes.
+Les coordonnées se calculent ainsi : `x_pct = (x + largeur/2) / largeur_image × 100`, de même pour `y_pct` avec la hauteur.
 
-Saving re-reads the dashboard configuration, finds this card by exact comparison with the configuration it was loaded
-with, replaces its `tiles` and saves. If the card changed elsewhere in the meantime, or if the dashboard is in YAML
-mode, an error is shown and **nothing is written**. Back up your dashboard before the first save.
+## Actions
 
-## Known limitations
+Chaque bulle accepte trois actions : `tap_action`, `double_tap_action` et `hold_action`.
 
-- Saving works **only** for dashboards in storage mode (edited from the UI), not YAML dashboards.
-- The dashboard is deduced from the first URL segment (`/lovelace/...` = default dashboard). A card shown in another
-  context (card editor preview, dialog) may not be able to save.
-- Saving is refused when two cards of the dashboard are exactly identical; add a distinguishing field such as `title`.
-- Actions are implemented inside the card (no native `handleAction`): no `confirmation`, `haptic` or `repeat`.
-- No visual card editor: configure in YAML, then use the on-map editing mode.
-- If `ha-icon-picker` / `ha-entity-picker` are not loaded yet (lazy Home Assistant components), the panel falls back
-  to text fields.
-- In edit mode, mouse and touch events from tiles are stopped from reaching swipe-navigation modules such as
-  `hass-swipe-navigation`, otherwise a drag may change the view instead of moving the tile.
+| Action | Rôle | Champs |
+|---|---|---|
+| `none` | Ne fait rien. | |
+| `more-info` | Ouvre la fenêtre « plus d'infos » de l'entité. | `entity` (facultatif, sinon celle de la bulle) |
+| `toggle` | Bascule l'entité. | `entity` (facultatif) |
+| `call-service` | Appelle un service (`perform_action` accepté comme synonyme de `service`). | `service` (`domaine.service`), `data`, `target` |
+| `navigate` | Va vers une page du dashboard. | `navigation_path`, `navigation_replace` |
+| `url` | Ouvre une adresse dans un nouvel onglet. | `url_path` (`javascript:`, `data:` et `vbscript:` sont refusés) |
 
-## Development
+Règles :
 
-No build step. Check the syntax with `node --check tile-placer-card.js`.
+- Sans `tap_action`, une bulle liée à une entité ouvre « plus d'infos ». Dans le panneau, ce comportement s'appelle « Par défaut ». Le choix « Aucune » force au contraire l'absence d'action.
+- Sans `double_tap_action` ni `hold_action`, ces gestes ne font rien.
+- Dans le panneau d'édition, les actions s'appliquent **en direct** dès qu'elles sont complètes. Une action incomplète (service sans `domaine.service`, JSON invalide, chemin ou URL manquant) affiche « Pas encore appliqué » et n'est pas écrite.
 
----
+Exemple d'appel de service à l'appui long :
 
-# Français
+```yaml
+hold_action:
+  action: call-service
+  service: light.turn_on
+  data:
+    entity_id: light.salon
+    brightness_pct: 100
+```
 
-Carte Lovelace (JavaScript natif, un seul fichier, sans build) qui pose des **bulles** (icône MDI + nom + état d'une
-entité) sur une **image de fond**, par exemple un plan de maison. Les bulles se déplacent **directement sur la carte**
-et se configurent une par une (icône, entité, nom, taille, couleur, actions clic / double clic / appui long) dans un
-panneau qui s'ouvre sur le plan. Les modifications sont enregistrées dans le dashboard.
+## Conseils
 
-## Installation (HACS)
+- **Carte en grand.** Mets la carte seule dans une vue de type **Panneau** avec `fit_screen: true`. Ajuste `screen_offset` si la carte dépasse ou laisse trop de marge.
+- **Image de fond.** Un fichier dans `/config/www/` est servi sous `/local/`. N'utilise pas `/media/` : ces fichiers demandent une autorisation que la balise image ne fournit pas.
+- **Rapport de l'image.** Divise la largeur par la hauteur du fichier (ex. 2400 × 1792 donne `"2400:1792"` ou `"1200:896"`). Une valeur fausse décale toutes les bulles.
+- **Nom plutôt qu'état.** Pour une vue dense, laisse `show_state: false` et `label_mode: hover`, puis active l'état seulement sur les capteurs utiles.
+- **Plusieurs cartes identiques.** Ajoute un champ distinctif comme `title` pour que l'enregistrement sache laquelle modifier.
 
-1. HACS → ⋮ → **Dépôts personnalisés**.
-2. Dépôt : `https://github.com/SkyTyphon/tile-placer-card`, type **Tableau de bord**.
-3. Installer **Tile Placer Card**, puis rechargement forcé du navigateur (Ctrl+F5).
+## Limites connues
 
-## Utilisation rapide
+- L'enregistrement fonctionne **uniquement** pour les dashboards en mode stockage (modifiés depuis l'interface), pas pour les dashboards YAML.
+- Le dashboard est déduit du premier segment de l'URL (`/lovelace/...` = dashboard par défaut). Une carte affichée ailleurs (aperçu de l'éditeur de carte, fenêtre) peut ne pas pouvoir enregistrer.
+- L'enregistrement est refusé si deux cartes du dashboard sont rigoureusement identiques.
+- Les actions sont codées dans la carte, sans le `handleAction` natif : pas de `confirmation`, de `haptic` ni de `repeat`.
+- Pas d'éditeur visuel de la carte : configure en YAML, puis utilise le mode édition sur le plan.
+- Si `ha-icon-picker` ou `ha-entity-picker` ne sont pas encore chargés (composants chargés à la demande par Home Assistant), le panneau bascule sur des champs texte.
+- En mode édition, les événements souris et tactiles des bulles ne remontent pas aux modules de navigation par balayage comme `hass-swipe-navigation`, sinon un glissement changerait de vue au lieu de déplacer la bulle.
+- Écrans tactiles et application Companion : non testés.
 
-1. Mets l'image du plan dans `/config/www/` et indique-la dans `background`. Renseigne le **vrai ratio** de l'image dans
-   `aspect_ratio` (ex. `1200:896`).
-2. Pour une carte en grand, mets la carte seule dans une vue de type `panel` avec `fit_screen: true`.
-3. Clique sur le **crayon**, glisse les bulles, clique sur une bulle pour régler son nom, son icône, sa taille…
-4. **Enregistrer**. Sauvegarde le dashboard avant le premier enregistrement.
+## Dépannage
+
+- **« Custom element doesn't exist » ou carte vide.** La ressource n'est pas chargée. Vérifie Paramètres, Tableaux de bord, Ressources, puis fais Ctrl+F5.
+- **Les bulles ne sont pas au bon endroit.** `aspect_ratio` ne correspond pas au vrai rapport de l'image.
+- **Pas de crayon.** Le compte n'est pas administrateur, ou `editable: false` est réglé.
+- **« Écart détecté » à l'enregistrement.** La carte a changé dans le dashboard depuis le chargement de la page. Recharge la page et refais tes modifications.
+- **Impossible de glisser une bulle.** Un module de balayage capte peut-être le geste. Vérifie que tu es en mode édition (cadre en pointillés).
+- **L'image de fond ne s'affiche pas.** Le fichier n'est pas dans `/config/www/` ou l'adresse est fausse. Teste `/local/plan.png` dans le navigateur.
+- **Une action ne répond pas.** Rouvre le panneau de la bulle : un message « Pas encore appliqué » indique le champ à corriger. Pense à enregistrer ensuite.
+
+## Développement
+
+Aucun build. Vérifie la syntaxe avec :
+
+```bash
+node --check tile-placer-card.js
+```
+
+Pour publier une version : incrémente `TPC_VERSION`, crée une release GitHub contenant `tile-placer-card.js`, puis mets à jour dans HACS.
 
 ## Licence
 
