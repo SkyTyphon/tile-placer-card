@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.8.1";
+const TPC_VERSION = "0.8.2";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -730,6 +730,7 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     } else {
       iconCtl = text(tile.icon, (v) => this._live(tile, () => { tile.icon = v.trim(); }), { placeholder: "mdi:lightbulb" });
     }
+    const curDev = this._deviceOf(tile.entity);
     let entCtl;
     if (customElements.get("ha-entity-picker")) {
       entCtl = document.createElement("ha-entity-picker");
@@ -782,7 +783,6 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
 
     // Menu déroulant « Appareil » : choisit l'entité principale de l'appareil et reprend son nom.
     const devices = this._deviceList();
-    const curDev = this._deviceOf(tile.entity);
     let devCtl;
     if (devices.length) {
       devCtl = h("select", { "aria-label": "Appareil" });
