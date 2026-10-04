@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.5.0";
+const TPC_VERSION = "0.5.1";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -996,7 +996,11 @@ class TilePlacerCardEditor extends HTMLElement {
       form.computeHelper = (s) => EDITOR_HELPERS[s.name] || "";
       form.addEventListener("value-changed", (ev) => {
         const cfg = { ...this._config, ...ev.detail.value };
-        for (const k of Object.keys(cfg)) if (cfg[k] === "" || cfg[k] === undefined) delete cfg[k];
+        const defaults = { editable: true, label_mode: "hover", fit_screen: false };
+        for (const k of Object.keys(cfg)) {
+          // retire les champs vides et les valeurs par défaut que l'utilisateur n'a pas écrites
+          if (cfg[k] === "" || cfg[k] === undefined || (k in defaults && cfg[k] === defaults[k] && !(k in this._config))) delete cfg[k];
+        }
         this._config = cfg;
         this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: cfg }, bubbles: true, composed: true }));
       });
