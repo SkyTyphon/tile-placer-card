@@ -4,6 +4,8 @@
 
 [Français](https://github.com/SkyTyphon/tile-placer-card/blob/main/README.md) · **English**
 
+[![Open your Home Assistant instance and add this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SkyTyphon&repository=tile-placer-card&category=plugin)
+
 A Lovelace card (plain JavaScript, single file, no build, no dependency) that places **bubbles** (MDI icon, name, optional entity state) on a **background image**, for example your house floor plan. Bubbles are positioned in percent, dragged **directly on the map** with a mouse or a finger, and configured one by one (name, icon, entity, size, colour, tap / double tap / hold actions) from a panel that opens on the map. Changes are saved back into the dashboard.
 
 Inspired by the HA Views add-on, but delivered as a card.
@@ -30,6 +32,14 @@ Inspired by the HA Views add-on, but delivered as a card.
 ## Installation
 
 ### HACS (custom repository)
+
+**Quick way:** click the button; it opens your Home Assistant on this repository's page in HACS. Confirm adding the repository, then click **Download**.
+
+[![Open your Home Assistant instance and add this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SkyTyphon&repository=tile-placer-card&category=plugin)
+
+The button goes through My Home Assistant: the first time, enter the address of your instance. HACS must already be installed.
+
+**Manual way:**
 
 1. In HACS, open the ⋮ menu, then **Custom repositories**.
 2. Repository: `https://github.com/SkyTyphon/tile-placer-card`, type **Dashboard** (Lovelace).

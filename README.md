@@ -4,6 +4,8 @@
 
 **Français** · [English version](https://github.com/SkyTyphon/tile-placer-card/blob/main/README_eng.md)
 
+[![Ouvrir ton Home Assistant et ajouter ce dépôt dans HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SkyTyphon&repository=tile-placer-card&category=plugin)
+
 Carte Lovelace (JavaScript natif, un seul fichier, sans build, sans dépendance) qui pose des **bulles** (icône MDI, nom, état d'une entité) sur une **image de fond**, par exemple le plan de ta maison. Les bulles se placent en pourcentage, se déplacent **directement sur la carte** à la souris ou au doigt, et se configurent une par une (nom, icône, entité, taille, couleur, actions au clic, au double clic et à l'appui long) dans un panneau qui s'ouvre sur le plan. Les modifications sont enregistrées dans le dashboard.
 
 Elle s'inspire de l'add-on HA Views, mais elle est livrée sous forme de carte.
@@ -30,6 +32,14 @@ Elle s'inspire de l'add-on HA Views, mais elle est livrée sous forme de carte.
 ## Installation
 
 ### Avec HACS (dépôt personnalisé)
+
+**Méthode rapide :** clique sur le bouton, il ouvre ton Home Assistant sur la page du dépôt dans HACS. Valide l'ajout du dépôt, puis clique sur **Télécharger**.
+
+[![Ouvrir ton Home Assistant et ajouter ce dépôt dans HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SkyTyphon&repository=tile-placer-card&category=plugin)
+
+Le bouton passe par My Home Assistant : à la première utilisation, indique l'adresse de ton instance. HACS doit déjà être installé.
+
+**Méthode manuelle :**
 
 1. Dans HACS, ouvre le menu ⋮ puis **Dépôts personnalisés**.
 2. Dépôt : `https://github.com/SkyTyphon/tile-placer-card`, type **Tableau de bord** (Lovelace).
