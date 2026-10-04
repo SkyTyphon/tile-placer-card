@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.3";
+const TPC_VERSION = "0.9.4";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -1302,6 +1302,7 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       this._dirty = false;
       this._editing = false;
       this._saving = false;
+      this._msg = null;
       this._build();
       if (reload) setTimeout(() => location.reload(), 400);
       return;
