@@ -29,7 +29,7 @@ HACS registers the resource automatically.
 ### Manual
 
 1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Settings → Dashboards → ⋮ → **Resources** → add `/local/tile-placer-card.js?v=0.3.1`, type **JavaScript module**.
+2. Settings → Dashboards → ⋮ → **Resources** → add `/local/tile-placer-card.js?v=0.4.0`, type **JavaScript module**.
 3. Bump the `?v=` value after each update (Home Assistant caches `/local/` for a long time).
 
 ## Configuration
@@ -89,8 +89,8 @@ Hold = 500 ms.
 1. Click the **pencil** (top right of the card, administrators only). A dashed frame and a grid appear.
 2. **Drag** a tile, with mouse or finger. Arrow keys move the selected tile by 1 %, Shift + arrows by 5 %.
 3. **Click** a tile to select it: a panel opens over the map with live preview — name, icon, entity, label display,
-   size, colour, state, transparent background, delete. Actions are validated with **Apply actions**.
-4. Click on empty space to deselect. **Add a tile** creates one in the centre.
+   size, colour, state, transparent background, delete. Actions apply live as soon as they are valid; "Default" on tap keeps the more-info behaviour.
+4. Click on empty space to deselect. **+ New device** creates a bubble near the centre and selects it (pick its entity and icon in the panel).
 5. **Save** writes the tiles into the dashboard; **Cancel** discards the changes.
 
 Saving re-reads the dashboard configuration, finds this card by exact comparison with the configuration it was loaded

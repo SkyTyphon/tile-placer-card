@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.3.1";
+const TPC_VERSION = "0.4.0";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -268,7 +268,7 @@ class TilePlacerCard extends HTMLElement {
     }
     this._els.clear();
     for (const t of this._tiles) this._createTile(t);
-    this._emptyHint = h("div", { class: "empty", text: "Aucune tuile. Utilise le crayon pour en ajouter." });
+    this._emptyHint = h("div", { class: "empty", text: "Aucune bulle. Utilise le crayon puis « Nouvel appareil »." });
     stage.append(this._emptyHint);
 
     this._pencil = h("button", {
@@ -419,7 +419,7 @@ class TilePlacerCard extends HTMLElement {
     tb.replaceChildren();
     if (!this._editing) { tb.style.display = "none"; return; }
     tb.style.display = "";
-    const add = h("button", { class: "btn", type: "button", text: "Ajouter une tuile", onclick: () => this._addTile() });
+    const add = h("button", { class: "btn", type: "button", text: "+ Nouvel appareil", onclick: () => this._addTile() });
     const save = h("button", {
       class: "btn primary", type: "button", text: this._saving ? "Enregistrement…" : "Enregistrer",
       onclick: () => this._save(),
@@ -462,7 +462,15 @@ class TilePlacerCard extends HTMLElement {
   }
 
   _addTile() {
-    const t = { id: newId(), x_pct: 50, y_pct: 50, icon: "mdi:lightbulb", size: 48 };
+    // Position libre la plus proche du centre : évite d'empiler la nouvelle bulle sur une existante.
+    let x = 50;
+    let y = 50;
+    const taken = (px, py) => this._tiles.some((o) => Math.hypot(o.x_pct - px, o.y_pct - py) < 4);
+    for (let i = 0; i < 40 && taken(x, y); i++) {
+      x = clamp(50 + (i % 8) * 5 - 17, 3, 97);
+      y = clamp(50 + Math.floor(i / 8) * 5 - 5, 3, 97);
+    }
+    const t = { id: newId(), x_pct: x, y_pct: y, size: 36 };
     this._tiles.push(t);
     this._createTile(t);
     this._markDirty();
@@ -573,37 +581,44 @@ class TilePlacerCard extends HTMLElement {
 
     // actions : validées par un bouton (JSON, service)
     const draft = { tap_action: tile.tap_action, double_tap_action: tile.double_tap_action, hold_action: tile.hold_action };
-    for (const k of ACTION_KEYS) draft[k] = draft[k] ? clone(draft[k]) : { action: "none" };
+    for (const k of ACTION_KEYS) draft[k] = draft[k] ? clone(draft[k]) : { action: "default" };
     const errBox = h("div", { class: "err", role: "alert" });
     const rowFn = (label, control) => h("div", { class: "row" }, [h("label", { text: label }), control]);
-    const actionBoxes = ACTION_KEYS.map((k) => this._actionEditor(k, draft, text, rowFn));
-    const apply = h("button", { type: "button", text: "Appliquer les actions" });
-    apply.addEventListener("click", () => {
+    // Les actions s'appliquent en direct dès qu'elles sont valides ; une action incomplète n'est pas écrite.
+    const commit = () => {
+      const out = {};
       try {
         for (const key of ACTION_KEYS) {
-          const a = draft[key];
-          if (a._dataText !== undefined) {
-            const txt = a._dataText.trim();
+          const a = clone(draft[key]);
+          const txt = (a._dataText || "").trim();
+          delete a._dataText;
+          if (a.action === "call-service") {
             if (txt) {
               const obj = JSON.parse(txt);
               if (obj === null || typeof obj !== "object" || Array.isArray(obj)) throw new Error("Les données doivent être un objet JSON");
               a.data = obj;
             } else delete a.data;
-          }
-          delete a._dataText;
-          if (a.action === "call-service" && !(a.service && /^[a-z0-9_]+\.[a-z0-9_]+$/i.test(a.service))) {
-            throw new Error(`${ACTION_LABELS[key]} : service au format domaine.service requis`);
+            if (!(a.service && /^[a-z0-9_]+\.[a-z0-9_]+$/i.test(a.service))) {
+              throw new Error(`${ACTION_LABELS[key]} : service au format domaine.service requis`);
+            }
           }
           if (a.action === "navigate" && !a.navigation_path) throw new Error(`${ACTION_LABELS[key]} : chemin requis`);
           if (a.action === "url" && !a.url_path) throw new Error(`${ACTION_LABELS[key]} : URL requise`);
+          out[key] = a;
         }
       } catch (err) {
-        errBox.textContent = "Erreur : " + (err.message || err);
+        errBox.textContent = "Pas encore appliqué : " + (err.message || err);
         return;
       }
-      errBox.textContent = "Actions appliquées.";
-      this._live(tile, () => { for (const key of ACTION_KEYS) tile[key] = clone(draft[key]); });
-    });
+      errBox.textContent = "";
+      this._live(tile, () => {
+        for (const key of ACTION_KEYS) {
+          if (out[key].action === "default") delete tile[key];
+          else tile[key] = out[key];
+        }
+      });
+    };
+    const actionBoxes = ACTION_KEYS.map((k) => this._actionEditor(k, draft, text, rowFn, commit));
 
     const del = h("button", { type: "button", class: "danger", text: "Supprimer la bulle" });
     del.addEventListener("click", () => { if (confirm("Supprimer cette bulle ?")) this._deleteTile(tile.id); });
@@ -622,7 +637,7 @@ class TilePlacerCard extends HTMLElement {
       ]),
       check(tile.show_state === true, (v) => this._live(tile, () => { tile.show_state = v; }), "Afficher l'état sous la bulle"),
       check(tile.transparent, (v) => this._live(tile, () => { tile.transparent = v; }), "Fond transparent (icône seule)"),
-      h("details", null, [h("summary", { text: "Actions (clic, double clic, appui long)" }), ...actionBoxes, apply, errBox]),
+      h("details", null, [h("summary", { text: "Actions (clic, double clic, appui long)" }), ...actionBoxes, errBox]),
       h("div", { class: "btns" }, [del, done]),
     );
   }
@@ -800,11 +815,17 @@ class TilePlacerCard extends HTMLElement {
     ]);
   }
 
-  _actionEditor(key, draft, textInput, row) {
+  _actionEditor(key, draft, textInput, row, commit) {
     const a = draft[key];
     const box = h("div");
     const sel = h("select", { "aria-label": ACTION_LABELS[key] });
-    for (const [v, l] of ACTION_TYPES) {
+    const isTap = key === "tap_action";
+    if (!isTap && a.action === "none") a.action = "default";
+    const choices = [
+      ["default", isTap ? "Par défaut (plus d'infos si entité)" : "Aucune"],
+      ...ACTION_TYPES.filter(([t]) => isTap || t !== "none"),
+    ];
+    for (const [v, l] of choices) {
       const o = h("option", { value: v, text: l });
       if (a.action === v) o.selected = true;
       sel.append(o);
@@ -813,19 +834,19 @@ class TilePlacerCard extends HTMLElement {
     const renderSub = () => {
       sub.replaceChildren();
       if (a.action === "call-service") {
-        sub.append(row("Service (domaine.service)", textInput(a.service, (v) => { a.service = v.trim(); }, { placeholder: "light.turn_on" })));
+        sub.append(row("Service (domaine.service)", textInput(a.service, (v) => { a.service = v.trim(); commit(); },{ placeholder: "light.turn_on" })));
         const ta = h("textarea", { "aria-label": "Données JSON", placeholder: '{"entity_id": "light.salon"}' });
         if (a._dataText === undefined) a._dataText = a.data ? JSON.stringify(a.data, null, 2) : "";
         ta.value = a._dataText;
-        ta.addEventListener("input", () => { a._dataText = ta.value; });
+        ta.addEventListener("input", () => { a._dataText = ta.value; commit(); });
         sub.append(row("Données (JSON, optionnel)", ta));
       } else if (a.action === "navigate") {
-        sub.append(row("Chemin", textInput(a.navigation_path, (v) => { a.navigation_path = v.trim(); }, { placeholder: "/lovelace/0" })));
+        sub.append(row("Chemin", textInput(a.navigation_path, (v) => { a.navigation_path = v.trim(); commit(); },{ placeholder: "/lovelace/0" })));
       } else if (a.action === "url") {
-        sub.append(row("URL", textInput(a.url_path, (v) => { a.url_path = v.trim(); }, { placeholder: "https://…" })));
+        sub.append(row("URL", textInput(a.url_path, (v) => { a.url_path = v.trim(); commit(); },{ placeholder: "https://…" })));
       }
     };
-    sel.addEventListener("change", () => { a.action = sel.value; renderSub(); });
+    sel.addEventListener("change", () => { a.action = sel.value; renderSub(); commit(); });
     renderSub();
     box.append(h("h3", { text: ACTION_LABELS[key] }), sel, sub);
     return box;
