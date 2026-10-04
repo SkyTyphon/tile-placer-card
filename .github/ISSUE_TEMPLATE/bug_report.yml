@@ -1,0 +1,61 @@
+name: Bug report
+description: Something does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Please remove anything private (entity names, addresses) from what you paste.
+  - type: input
+    id: card-version
+    attributes:
+      label: Card version
+      description: Shown in HACS, or in the browser console as `TILE-PLACER-CARD v…`.
+      placeholder: "0.9.4"
+    validations:
+      required: true
+  - type: input
+    id: ha-version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.9.4"
+    validations:
+      required: true
+  - type: dropdown
+    id: client
+    attributes:
+      label: Where does it happen?
+      options:
+        - Desktop browser
+        - Mobile browser
+        - Companion app (Android)
+        - Companion app (iOS)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Click the pencil
+        2. Drag a bubble
+        3. …
+  - type: textarea
+    id: config
+    attributes:
+      label: Card configuration (YAML)
+      description: Remove anything private.
+      render: yaml
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error message
+      description: The text of the red "Erreur du panneau" box, or the first red line of the browser console (F12, tab "Console").
+      render: text
