@@ -35,6 +35,8 @@ Elle s'inspire de l'add-on HA Views, mais elle est livrée sous forme de carte.
 
 ### Avec HACS (dépôt personnalisé)
 
+[**Tile Placer Card** dans HACS](https://my.home-assistant.io/redirect/hacs_repository/?owner=SkyTyphon&repository=tile-placer-card&category=plugin) · [Code source sur GitHub](https://github.com/SkyTyphon/tile-placer-card)
+
 **Méthode rapide :** clique sur le bouton, il ouvre ton Home Assistant sur la page du dépôt dans HACS. Valide l'ajout du dépôt, puis clique sur **Télécharger**.
 
 [![Ouvrir ton Home Assistant et ajouter ce dépôt dans HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SkyTyphon&repository=tile-placer-card&category=plugin)
@@ -52,7 +54,7 @@ HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 ### À la main
 
 1. Copie `tile-placer-card.js` dans `/config/www/`.
-2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.9.1` en type **Module JavaScript**.
+2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.9.2` en type **Module JavaScript**.
 3. Change la valeur de `?v=` à chaque mise à jour : Home Assistant garde `/local/` en cache très longtemps.
 
 ## Démarrage rapide

@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.1";
+const TPC_VERSION = "0.9.2";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -1063,9 +1063,9 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       if (cancelled) return;
       if (this._editing) {
         if (s.moved) {
-          // Un déplacement n'ouvre pas le panneau ; il ferme celui d'une autre bulle.
+          // Un déplacement n'ouvre pas le panneau, et ferme celui qui était ouvert.
           this._markDirty();
-          if (this._selectedId !== tile.id) this._select(null);
+          this._select(null);
         } else {
           this._select(tile.id);
         }
@@ -1228,6 +1228,22 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     return seg === "lovelace" ? null : seg;
   }
 
+  _findLovelace(urlPath) {
+    let n = this;
+    for (let i = 0; i < 60 && n; i++) {
+      const ll = n.lovelace;
+      if (ll && typeof ll.saveConfig === "function") {
+        const lp = ll.urlPath || null;
+        if (!lp || !urlPath || lp === urlPath || (lp === "lovelace" && !urlPath)) return ll;
+        return null;
+      }
+      let next = n.assignedSlot || n.parentNode;
+      if (next && next.nodeType === 11) next = next.host;
+      n = next;
+    }
+    return null;
+  }
+
   _findCards(node, key, out, seen) {
     if (!node || typeof node !== "object" || seen.has(node)) return out;
     seen.add(node);
@@ -1269,8 +1285,13 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       Object.assign(target, next);
       const saveReq = { type: "lovelace/config/save", config: cfg };
       if (urlPath) saveReq.url_path = urlPath;
+      // Passer par l'objet lovelace de l'interface met aussi à jour sa copie en mémoire : sinon la carte
+      // revient à l'ancien état dès que Home Assistant la recrée. Repli : écriture directe puis rechargement.
+      const ll = this._findLovelace(urlPath);
+      let reload = false;
       try {
-        await this._hass.callWS(saveReq);
+        if (ll) await ll.saveConfig(cfg);
+        else { await this._hass.callWS(saveReq); reload = true; }
       } catch (e) {
         throw new Error("Écriture refusée : " + (e && e.message ? e.message : JSON.stringify(e)));
       }
@@ -1281,6 +1302,7 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       this._editing = false;
       this._saving = false;
       this._build();
+      if (reload) setTimeout(() => location.reload(), 400);
       return;
     } catch (err) {
       this._saving = false;
