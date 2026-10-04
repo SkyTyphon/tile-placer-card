@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.7.0";
+const TPC_VERSION = "0.8.0";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -89,6 +89,8 @@ function cleanTile(t) {
   for (const k of ACTION_KEYS) {
     if (out[k] && !actionDefined(out[k])) delete out[k];
   }
+  if (out.shape === "circle") delete out.shape;
+  if (out.shape !== "rectangle") delete out.width;
   out.x_pct = round2(clamp(Number(out.x_pct) || 0, 0, 100));
   out.y_pct = round2(clamp(Number(out.y_pct) || 0, 0, 100));
   return out;
@@ -107,12 +109,12 @@ ha-card { overflow: hidden; position: relative; }
   linear-gradient(to bottom, color-mix(in srgb, var(--primary-text-color) 10%, transparent) 1px, transparent 1px);
   background-size: 10% 10%; }
 .tile { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column;
-  align-items: center; gap: 2px; min-width: 40px; max-width: 140px; cursor: pointer; user-select: none;
+  align-items: center; gap: 2px; min-width: 40px; max-width: 420px; cursor: pointer; user-select: none;
   -webkit-user-select: none; -webkit-touch-callout: none; border-radius: 12px; padding: 2px; outline: none; }
 .tile:focus-visible { box-shadow: 0 0 0 2px var(--primary-color); }
 .stage.editing .tile { cursor: grab; touch-action: none; }
 .tile.dragging { cursor: grabbing; z-index: 5; opacity: .85; }
-.tile .bubble { display: flex; align-items: center; justify-content: center; border-radius: 50%;
+.tile .bubble { position: relative; display: flex; align-items: center; justify-content: center; border-radius: 50%;
   background: color-mix(in srgb, var(--card-background-color, #fff) 82%, transparent);
   border: 1px solid var(--divider-color); box-shadow: 0 1px 4px rgba(0,0,0,.25); color: var(--secondary-text-color); }
 .tile.active .bubble { color: var(--tile-color, var(--state-icon-active-color, var(--primary-color))); }
@@ -125,6 +127,12 @@ ha-card { overflow: hidden; position: relative; }
 .tile.lm-hover .label, .tile.lm-never .label { display: none; }
 .tile.lm-hover:hover, .tile.selected { z-index: 6; }
 .tile.lm-hover:hover .label, .stage.editing .tile.selected .label { display: block; }
+.tile.shape-rounded .bubble { border-radius: 24%; }
+.tile.shape-square .bubble { border-radius: 4px; }
+.tile.shape-rectangle .bubble { border-radius: 12px; }
+.tile .rs { display: none; position: absolute; right: -7px; bottom: -7px; width: 14px; height: 14px; box-sizing: border-box;
+  background: var(--primary-color); border: 2px solid #fff; border-radius: 3px; cursor: nwse-resize; touch-action: none; z-index: 7; }
+.stage.editing .tile.selected .rs { display: block; }
 .tile.transparent .bubble { background: transparent; border-color: transparent; box-shadow: none; }
 .tile.selected .bubble { outline: 2px solid var(--primary-color); outline-offset: 2px; }
 .panel { position: absolute; right: 8px; bottom: 8px; z-index: 20; width: min(340px, calc(100% - 16px)); max-height: 70%;
@@ -332,24 +340,30 @@ class TilePlacerCard extends HTMLElement {
     const el = h("div", { class: "tile", role: "button", tabindex: "0" });
     const bubble = h("div", { class: "bubble" });
     const iconHost = h("div", { style: "display:flex" });
-    bubble.append(iconHost);
+    const rs = h("div", { class: "rs", title: "Glisser pour redimensionner" });
+    bubble.append(iconHost, rs);
     const label = h("div", { class: "label" });
     const state = h("div", { class: "state" });
     el.append(bubble, label, state);
     this._stage.insertBefore(el, this._emptyHint || null);
     this._els.set(t.id, { root: el, bubble, iconHost, label, state, iconKey: null });
     this._bindTile(el, t);
+    this._bindResize(rs, t);
     this._applyTileGeometry(t);
   }
 
   _applyTileGeometry(t) {
     const e = this._els.get(t.id);
     if (!e) return;
-    const size = clamp(Number(t.size) || 48, 24, 160);
+    const size = clamp(Number(t.size) || 48, 20, 300);
+    const shape = ["rounded", "square", "rectangle"].includes(t.shape) ? t.shape : "circle";
+    const width = shape === "rectangle" ? clamp(Number(t.width) || Math.round(size * 1.6), 20, 400) : size;
+    for (const m of ["circle", "rounded", "square", "rectangle"]) e.root.classList.toggle("shape-" + m, m === shape);
     e.root.style.left = `${clamp(Number(t.x_pct) || 0, 0, 100)}%`;
     e.root.style.top = `${clamp(Number(t.y_pct) || 0, 0, 100)}%`;
-    e.bubble.style.width = e.bubble.style.height = `${size}px`;
-    e.root.style.setProperty("--tile-icon-size", `${Math.round(size * 0.55)}px`);
+    e.bubble.style.width = `${width}px`;
+    e.bubble.style.height = `${size}px`;
+    e.root.style.setProperty("--tile-icon-size", `${Math.round(Math.min(size, width) * 0.55)}px`);
     if (t.color) {
       e.root.style.setProperty("--tile-color", String(t.color));
       e.root.classList.add("has-color");
@@ -710,6 +724,7 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       entCtl.hass = hass;
       entCtl.value = tile.entity || "";
       entCtl.allowCustomEntity = true;
+      if (curDev) entCtl.includeEntities = this._deviceEntities(curDev);
       entCtl.addEventListener("value-changed", (ev) => {
         const v = ev.detail.value || "";
         if (v !== (tile.entity || "")) this._live(tile, () => { tile.entity = v; });
@@ -720,13 +735,55 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       entCtl = h("div", null, [text(tile.entity, (v) => this._live(tile, () => { tile.entity = v.trim(); }), { list: "tpc-entities", placeholder: "light.salon" }), dl]);
     }
 
-    const size = h("input", { type: "range", min: "20", max: "120", step: "2" });
+    const size = h("input", { type: "range", min: "20", max: "300", step: "2" });
     size.value = tile.size || 36;
     const sizeVal = h("span", { text: `${size.value} px` });
     size.addEventListener("input", () => {
       sizeVal.textContent = `${size.value} px`;
       this._live(tile, () => { tile.size = Number(size.value); });
     });
+
+    const shape = h("select", { "aria-label": "Forme de la bulle" });
+    for (const [v, l] of [["circle", "Rond"], ["rounded", "Carré arrondi"], ["square", "Carré"], ["rectangle", "Rectangle"]]) {
+      const o = h("option", { value: v, text: l });
+      if ((tile.shape || "circle") === v) o.selected = true;
+      shape.append(o);
+    }
+    const width = h("input", { type: "range", min: "20", max: "400", step: "2" });
+    width.value = tile.width || Math.round((tile.size || 36) * 1.6);
+    const widthVal = h("span", { text: `${width.value} px` });
+    const widthRow = lbl("Largeur", h("div", { class: "inline" }, [width, widthVal]));
+    widthRow.style.display = tile.shape === "rectangle" ? "" : "none";
+    width.addEventListener("input", () => {
+      widthVal.textContent = `${width.value} px`;
+      this._live(tile, () => { tile.width = Number(width.value); });
+    });
+    shape.addEventListener("change", () => {
+      this._live(tile, () => {
+        if (shape.value === "circle") delete tile.shape;
+        else tile.shape = shape.value;
+        if (shape.value === "rectangle" && !tile.width) tile.width = Math.round((tile.size || 36) * 1.6);
+      });
+      widthRow.style.display = shape.value === "rectangle" ? "" : "none";
+      if (shape.value === "rectangle") { width.value = tile.width; widthVal.textContent = `${width.value} px`; }
+    });
+
+    // Menu déroulant « Appareil » : choisit l'entité principale de l'appareil et reprend son nom.
+    const devices = this._deviceList();
+    const curDev = this._deviceOf(tile.entity);
+    let devCtl;
+    if (devices.length) {
+      devCtl = h("select", { "aria-label": "Appareil" });
+      devCtl.append(h("option", { value: "", text: "— Aucun : choisir une entité —" }));
+      for (const d of devices) {
+        const o = h("option", { value: d.id, text: d.label });
+        if (d.id === curDev) o.selected = true;
+        devCtl.append(o);
+      }
+      devCtl.addEventListener("change", () => this._pickDevice(tile, devCtl.value));
+    } else {
+      devCtl = h("div", { class: "hint", text: "Liste des appareils indisponible : choisis une entité." });
+    }
 
     const mode = h("select", { "aria-label": "Affichage du libellé" });
     for (const [v, l] of [["hover", "Au survol / sélection"], ["always", "Toujours"], ["never", "Jamais"]]) {
@@ -792,9 +849,12 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       h("div", { class: "cols" }, [
         lbl("Nom", text(tile.name, (v) => this._live(tile, () => { tile.name = v; }), { placeholder: "Nom (sinon nom de l'entité)" })),
         lbl("Icône", iconCtl),
+        lbl("Appareil", devCtl),
         lbl("Entité", entCtl),
         lbl("Affichage du nom", mode),
-        lbl("Taille", h("div", { class: "inline" }, [size, sizeVal])),
+        lbl("Forme", shape),
+        lbl("Taille (hauteur)", h("div", { class: "inline" }, [size, sizeVal])),
+        widthRow,
         lbl("Couleur de l'icône", h("div", { class: "inline" }, [colorText, colorPick])),
       ]),
       check(tile.show_state === true, (v) => this._live(tile, () => { tile.show_state = v; }), "Afficher l'état sous la bulle"),
@@ -802,6 +862,98 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       h("details", null, [h("summary", { text: "Actions (clic, double clic, appui long)" }), ...actionBoxes, errBox]),
       h("div", { class: "btns" }, [del, done]),
     );
+  }
+
+  /* --- appareils (registre Home Assistant) --- */
+
+  _deviceOf(entityId) {
+    const e = entityId && this._hass && this._hass.entities ? this._hass.entities[entityId] : null;
+    return e && e.device_id ? e.device_id : "";
+  }
+
+  _deviceEntities(deviceId) {
+    const prio = ["light", "switch", "cover", "climate", "media_player", "lock", "fan", "vacuum", "camera", "humidifier",
+      "water_heater", "alarm_control_panel", "valve", "binary_sensor", "sensor"];
+    const score = (e) => {
+      const d = prio.indexOf(e.entity_id.split(".")[0]);
+      return (e.entity_category ? 100 : 0) + (d < 0 ? 50 : d);
+    };
+    return Object.values((this._hass && this._hass.entities) || {})
+      .filter((e) => e.device_id === deviceId && !e.hidden && this._hass.states[e.entity_id])
+      .sort((a, b) => score(a) - score(b) || a.entity_id.localeCompare(b.entity_id))
+      .map((e) => e.entity_id);
+  }
+
+  _deviceName(id) {
+    const d = this._hass && this._hass.devices ? this._hass.devices[id] : null;
+    return d ? d.name_by_user || d.name || "" : "";
+  }
+
+  _deviceList() {
+    const hass = this._hass;
+    if (!hass || !hass.devices || !hass.entities) return [];
+    const withEntity = new Set();
+    for (const e of Object.values(hass.entities)) if (e.device_id && hass.states[e.entity_id]) withEntity.add(e.device_id);
+    const out = [];
+    for (const id of withEntity) {
+      const name = this._deviceName(id);
+      if (!name) continue;
+      const area = hass.devices[id].area_id && hass.areas && hass.areas[hass.devices[id].area_id];
+      out.push({ id, label: area && area.name ? `${name} (${area.name})` : name });
+    }
+    return out.sort((a, b) => a.label.localeCompare(b.label, "fr"));
+  }
+
+  _pickDevice(tile, deviceId) {
+    if (deviceId) {
+      const prevName = this._deviceName(this._deviceOf(tile.entity));
+      const first = this._deviceEntities(deviceId)[0];
+      const name = this._deviceName(deviceId);
+      this._live(tile, () => {
+        if (first) tile.entity = first;
+        if (!tile.name || tile.name === prevName) tile.name = name;
+      });
+    }
+    this._renderPanel();
+  }
+
+  /* --- redimensionnement à la main (poignée en bas à droite de la bulle sélectionnée) --- */
+
+  _bindResize(rs, tile) {
+    let st = null;
+    rs.addEventListener("pointerdown", (ev) => {
+      if (!this._editing || (ev.pointerType === "mouse" && ev.button !== 0)) return;
+      ev.stopPropagation();
+      ev.preventDefault();
+      const e = this._els.get(tile.id);
+      const br = e.bubble.getBoundingClientRect();
+      st = { id: ev.pointerId, cx: br.left + br.width / 2, cy: br.top + br.height / 2 };
+      try { rs.setPointerCapture(ev.pointerId); } catch (_) { /* ignore */ }
+    });
+    rs.addEventListener("pointermove", (ev) => {
+      if (!st || ev.pointerId !== st.id) return;
+      const dx = Math.abs(ev.clientX - st.cx);
+      const dy = Math.abs(ev.clientY - st.cy);
+      if (tile.shape === "rectangle") {
+        tile.width = Math.round(clamp(dx * 2, 20, 400));
+        tile.size = Math.round(clamp(dy * 2, 20, 300));
+      } else {
+        tile.size = Math.round(clamp(Math.max(dx, dy) * 2, 20, 300));
+      }
+      this._applyTileGeometry(tile);
+      ev.preventDefault();
+      ev.stopPropagation();
+    });
+    const end = (ev) => {
+      if (!st || ev.pointerId !== st.id) return;
+      st = null;
+      try { rs.releasePointerCapture(ev.pointerId); } catch (_) { /* ignore */ }
+      ev.stopPropagation();
+      this._markDirty();
+      this._renderPanel();
+    };
+    rs.addEventListener("pointerup", end);
+    rs.addEventListener("pointercancel", end);
   }
 
   /* --- interactions tuile --- */

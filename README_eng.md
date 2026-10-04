@@ -50,7 +50,7 @@ HACS registers the resource automatically, and updates also go through HACS.
 ### Manual
 
 1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.7.0` as a **JavaScript module**.
+2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.8.0` as a **JavaScript module**.
 3. Change the `?v=` value after each update: Home Assistant caches `/local/` for a very long time.
 
 ## Quick start
@@ -92,7 +92,7 @@ Drag the bubble with the mouse or a finger. With a bubble focused or selected, a
 
 ### Creating a device
 
-Click **+ New device**. A 36 px bubble appears near the centre, on a free spot so it does not stack on another one, and its panel opens. Pick the entity: the entity icon is used until you choose one yourself. Then drag the bubble into place.
+Click **+ New device**. A 36 px bubble appears near the centre, on a free spot so it does not stack on another one, and its panel opens. First pick the **device** in the "Appareil" (device) drop-down: its first useful entity is selected for you and its name is reused. You can then change the entity. With no device, pick an entity directly. The entity icon is used until you choose one yourself. Then drag the bubble into place.
 
 ### Configuring a bubble
 
@@ -102,14 +102,19 @@ Click a bubble to select it: a floating panel opens on the map and every change 
 |---|---|
 | Name | Displayed text. With no name, the entity name is used. |
 | Icon | MDI icon. With no icon, the entity icon is used. |
+| Device | Drop-down of Home Assistant devices. Selects the device's main entity and reuses its name when the bubble has none. |
 | Entity | Linked entity (state, more info, toggle…). |
 | Name display | On hover and selection, always, or never. |
-| Size | Bubble diameter, 20 to 120 px. |
+| Shape | Round, rounded square, square or rectangle. |
+| Size (height) | Bubble size, 20 to 300 px. |
+| Width | Rectangle shape only, 20 to 400 px. |
 | Icon colour | CSS colour, theme variable, or colour picker. |
 | Show state under the bubble | Adds the entity state under the bubble. |
 | Transparent background | Icon only, no background disc. |
 | Actions | Tap, double tap, hold (see [Actions](#actions)). |
 | Delete bubble | Removes the bubble after confirmation. |
+
+**Resizing by hand:** a selected bubble shows a square handle at its bottom right. Drag it to grow or shrink the bubble (for a rectangle, width and height follow separately). The panel sliders do the same, more precisely.
 
 Clicking an empty area of the map deselects the bubble.
 
@@ -170,7 +175,9 @@ More examples in [`examples/basic.yaml`](examples/basic.yaml).
 | `icon` | MDI icon. When empty, the entity icon is used. |
 | `entity` | Linked entity. Optional. |
 | `name` | Displayed name. Falls back to the entity friendly name. |
-| `size` | Bubble diameter in px (default 48). |
+| `shape` | `circle` (default), `rounded`, `square` or `rectangle`. |
+| `size` | Bubble size (height) in px (default 48, 20 to 300). |
+| `width` | Width in px, used only with `shape: rectangle` (default: 1.6 times `size`). |
 | `color` | Any CSS colour or variable, applied to the icon. |
 | `label_mode` | `hover`, `always` or `never` for this bubble. |
 | `show_state` | `true` shows the entity state under the bubble (default `false`). |

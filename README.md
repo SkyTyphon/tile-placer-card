@@ -50,7 +50,7 @@ HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 ### À la main
 
 1. Copie `tile-placer-card.js` dans `/config/www/`.
-2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.7.0` en type **Module JavaScript**.
+2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.8.0` en type **Module JavaScript**.
 3. Change la valeur de `?v=` à chaque mise à jour : Home Assistant garde `/local/` en cache très longtemps.
 
 ## Démarrage rapide
@@ -92,7 +92,7 @@ Glisse la bulle avec la souris ou le doigt. Avec une bulle qui a le focus, les f
 
 ### Créer un appareil
 
-Clique sur **+ Nouvel appareil**. Une bulle de 36 px apparaît près du centre, sur un emplacement libre pour ne pas se superposer à une autre, et son panneau s'ouvre. Choisis l'entité : l'icône de l'entité est utilisée tant que tu n'en choisis pas une toi-même. Glisse ensuite la bulle à sa place.
+Clique sur **+ Nouvel appareil**. Une bulle de 36 px apparaît près du centre, sur un emplacement libre pour ne pas se superposer à une autre, et son panneau s'ouvre. Choisis d'abord l'**appareil** dans le menu déroulant « Appareil » : sa première entité utile est choisie pour toi et son nom est repris. Tu peux ensuite changer l'entité. Sans appareil, choisis directement une entité. L'icône de l'entité est utilisée tant que tu n'en choisis pas une toi-même. Glisse ensuite la bulle à sa place.
 
 ### Régler une bulle
 
@@ -102,14 +102,19 @@ Clique sur une bulle pour la sélectionner : un panneau flottant s'ouvre sur le 
 |---|---|
 | Nom | Texte affiché. Sans nom, c'est le nom de l'entité. |
 | Icône | Icône MDI. Sans icône, c'est celle de l'entité. |
+| Appareil | Menu déroulant des appareils de Home Assistant. Choisit l'entité principale de l'appareil et reprend son nom si la bulle n'en a pas. |
 | Entité | Entité liée (état, plus d'infos, bascule…). |
 | Affichage du nom | Au survol et à la sélection, toujours, ou jamais. |
-| Taille | Diamètre de la bulle, de 20 à 120 px. |
+| Forme | Rond, carré arrondi, carré ou rectangle. |
+| Taille (hauteur) | Taille de la bulle, de 20 à 300 px. |
+| Largeur | Pour la forme rectangle seulement, de 20 à 400 px. |
 | Couleur de l'icône | Couleur CSS, variable de thème, ou sélecteur de couleur. |
 | Afficher l'état sous la bulle | Ajoute l'état de l'entité sous la bulle. |
 | Fond transparent | Icône seule, sans disque de fond. |
 | Actions | Clic, double clic, appui long (voir [Actions](#actions)). |
 | Supprimer la bulle | Retire la bulle après confirmation. |
+
+**Redimensionner à la main :** une bulle sélectionnée affiche une poignée carrée en bas à droite. Glisse-la pour agrandir ou réduire la bulle (pour un rectangle, la largeur et la hauteur suivent séparément). Les curseurs du panneau donnent la même chose, plus précisément.
 
 Un clic sur une zone vide du plan désélectionne la bulle.
 
@@ -170,7 +175,9 @@ D'autres exemples sont dans [`examples/basic.yaml`](examples/basic.yaml).
 | `icon` | Icône MDI. Vide : icône de l'entité. |
 | `entity` | Entité liée. Facultatif. |
 | `name` | Nom affiché. Sans nom : nom convivial de l'entité. |
-| `size` | Diamètre de la bulle en px (défaut 48). |
+| `shape` | `circle` (défaut), `rounded`, `square` ou `rectangle`. |
+| `size` | Taille (hauteur) de la bulle en px (défaut 48, de 20 à 300). |
+| `width` | Largeur en px, utilisée seulement avec `shape: rectangle` (défaut : 1,6 fois `size`). |
 | `color` | Couleur CSS ou variable, appliquée à l'icône. |
 | `label_mode` | `hover`, `always` ou `never` pour cette bulle. |
 | `show_state` | `true` affiche l'état de l'entité sous la bulle (défaut `false`). |
