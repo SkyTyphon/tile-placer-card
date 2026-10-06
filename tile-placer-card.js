@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.51";
+const TPC_VERSION = "0.9.52";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -713,6 +713,43 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     this._markDirty();
   }
 
+  /* Le panneau est positionné dans la scène ; sur un plan plus haut que la fenêtre, on le recale
+     sur la partie visible (au-dessus de la barre d'outils collée en bas) à chaque défilement. */
+  _placePanel() {
+    const p = this._panel, st = this._stage;
+    if (!p || !st || p.style.display === "none") return;
+    const r = st.getBoundingClientRect();
+    const tb = this._toolbar && this._toolbar.style.display !== "none" ? this._toolbar.getBoundingClientRect().height : 0;
+    const top = Math.max(r.top, 0) + 8;
+    const bottomEdge = Math.min(r.bottom - 8, window.innerHeight - tb - 8);
+    const avail = Math.max(160, bottomEdge - top);
+    p.style.bottom = Math.min(Math.max(8, r.bottom - bottomEdge), Math.max(8, r.height - 168)) + "px";
+    p.style.maxHeight = Math.round(Math.min(avail, Math.max(160, r.height * 0.7))) + "px";
+  }
+
+  _watchPanel() {
+    if (!this._onViewport) {
+      this._onViewport = () => {
+        if (this._placeRaf) return;
+        this._placeRaf = requestAnimationFrame(() => { this._placeRaf = 0; this._placePanel(); });
+      };
+      window.addEventListener("scroll", this._onViewport, { capture: true, passive: true });
+      window.addEventListener("resize", this._onViewport, { passive: true });
+    }
+    this._placePanel();
+  }
+
+  _unwatchPanel() {
+    if (!this._onViewport) return;
+    window.removeEventListener("scroll", this._onViewport, { capture: true });
+    window.removeEventListener("resize", this._onViewport);
+    this._onViewport = null;
+  }
+
+  disconnectedCallback() {
+    this._unwatchPanel();
+  }
+
   async _renderPanel() {
     try {
       await this._renderPanelInner();
@@ -730,10 +767,11 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     if (!panel) return;
     const tile = this._tiles.find((t) => t.id === this._selectedId);
     panel.replaceChildren();
-    if (!tile || !this._editing) { panel.style.display = "none"; return; }
+    if (!tile || !this._editing) { panel.style.display = "none"; this._unwatchPanel(); return; }
     await this._ensurePickers();
     if (this._selectedId !== tile.id) return;
     panel.style.display = "block";
+    this._watchPanel();
     const hass = this._hass;
     const lbl = (txt, ctl) => h("div", { class: "row" }, [h("label", { text: txt }), ctl]);
     const text = (val, on, attrs) => {
