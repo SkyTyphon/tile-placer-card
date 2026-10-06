@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.4";
+const TPC_VERSION = "0.9.5";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -164,6 +164,7 @@ ha-card { overflow: hidden; position: relative; }
 .toolbar .msg { flex: 1 1 160px; font-size: 13px; }
 .toolbar .msg.err { color: var(--error-color); }
 .toolbar .msg.ok { color: var(--success-color); }
+.toolbar .ver { font-size: 11px; opacity: 0.6; }
 button.btn { font: inherit; cursor: pointer; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--divider-color);
   background: var(--card-background-color); color: var(--primary-text-color); }
 button.btn.primary { background: var(--primary-color); color: var(--text-primary-color, #fff); border-color: var(--primary-color); }
@@ -543,7 +544,9 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     cancel.disabled = this._saving;
     const msg = h("div", { class: "msg" + (this._msg ? " " + this._msg.kind : ""), role: "status", "aria-live": "polite" });
     msg.textContent = this._msg ? this._msg.text : (this._dirty ? "Modifications non enregistrées." : "Glisse les tuiles ; clique pour configurer.");
-    tb.append(add, bg, save, cancel, msg);
+    // version visible : repère immédiat d'un ancien fichier resté en cache sur un appareil
+    const ver = h("span", { class: "ver", text: "v" + TPC_VERSION, title: "Version de Tile Placer Card chargée" });
+    tb.append(add, bg, save, cancel, msg, ver);
   }
 
   _canAddBackground() {
@@ -938,10 +941,19 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
   _deviceListUnsafe() {
     const hass = this._hass;
     if (!hass || !hass.devices || !hass.entities) return [];
+    // Un appareil « réel » : ni service, ni désactivé, avec au moins une entité principale visible
+    // (hors diagnostic/configuration, mises à jour, scènes, scripts et automatisations).
+    const virtual = new Set(["update", "scene", "script", "automation", "tts", "stt", "conversation", "ai_task"]);
     const withEntity = new Set();
-    for (const e of Object.values(hass.entities)) if (e.device_id && hass.states[e.entity_id]) withEntity.add(e.device_id);
+    for (const e of Object.values(hass.entities)) {
+      if (!e.device_id || e.hidden || e.disabled_by || e.entity_category || !hass.states[e.entity_id]) continue;
+      if (virtual.has(e.entity_id.split(".")[0])) continue;
+      withEntity.add(e.device_id);
+    }
     const out = [];
     for (const id of withEntity) {
+      const dev = hass.devices[id];
+      if (!dev || dev.entry_type === "service" || dev.disabled_by) continue;
       const name = this._deviceName(id);
       if (!name) continue;
       const area = hass.devices[id].area_id && hass.areas && hass.areas[hass.devices[id].area_id];
