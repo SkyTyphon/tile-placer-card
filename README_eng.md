@@ -1,5 +1,14 @@
 # Tile Placer Card
 
+> [!WARNING]
+> # ⚠️ BETA VERSION
+> **This card is in beta (`0.9.x`).** It changes quickly and may contain bugs. Its configuration format may still change between releases.
+>
+> - **Back up your dashboard** before installing it, and before every update.
+> - It is only tested on the author's instance, in a desktop browser. Touch devices and the Companion app are not tested.
+> - Please report any problem in the [Issues](https://github.com/SkyTyphon/tile-placer-card/issues).
+
+[![beta](https://img.shields.io/badge/status-BETA-red.svg)](#)
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/skytyphoni)
@@ -54,7 +63,7 @@ HACS registers the resource automatically, and updates also go through HACS.
 ### Manual
 
 1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.9.5` as a **JavaScript module**.
+2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.9.51` as a **JavaScript module**.
 3. Change the `?v=` value after each update: Home Assistant caches `/local/` for a very long time.
 
 ## Quick start

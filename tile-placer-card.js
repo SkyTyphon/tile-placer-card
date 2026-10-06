@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.5";
+const TPC_VERSION = "0.9.51";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -100,7 +100,8 @@ function cleanTile(t) {
 
 const CARD_CSS = `
 :host { display: block; }
-ha-card { overflow: hidden; position: relative; }
+/* clip (et non hidden) : ne crée pas de conteneur de défilement, la barre d'outils peut rester collée en bas de l'écran */
+ha-card { overflow: hidden; overflow: clip; position: relative; }
 .stage { position: relative; width: 100%; background: var(--secondary-background-color); overflow: hidden; }
 .stage img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; user-select: none; -webkit-user-drag: none; }
 .stage.editing { outline: 2px dashed var(--primary-color); outline-offset: -2px; }
@@ -160,7 +161,9 @@ ha-card { overflow: hidden; position: relative; }
 .panel ha-icon-picker, .panel ha-entity-picker { display: block; width: 100%; }
 .tile .state { font-size: 11px; color: var(--secondary-text-color); }
 .tile .bubble ha-icon, .tile .bubble ha-state-icon { --mdc-icon-size: var(--tile-icon-size, 24px); display: flex; }
-.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px;
+  position: sticky; bottom: 0; z-index: 25; border-top: 1px solid var(--divider-color);
+  background: var(--ha-card-background, var(--card-background-color, #fff)); }
 .toolbar .msg { flex: 1 1 160px; font-size: 13px; }
 .toolbar .msg.err { color: var(--error-color); }
 .toolbar .msg.ok { color: var(--success-color); }

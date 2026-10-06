@@ -1,5 +1,14 @@
 # Tile Placer Card
 
+> [!WARNING]
+> # ⚠️ BETA VERSION
+> **Cette carte est en version bêta (`0.9.x`).** Elle évolue vite et peut contenir des bugs. Son format de configuration peut encore changer d'une version à l'autre.
+>
+> - **Sauvegarde ton dashboard** avant de l'installer, et avant chaque mise à jour.
+> - Elle n'est testée que sur l'instance de l'auteur, dans un navigateur de bureau. Les écrans tactiles et l'application Companion ne sont pas testés.
+> - Signale tout problème dans les [Issues](https://github.com/SkyTyphon/tile-placer-card/issues).
+
+[![beta](https://img.shields.io/badge/status-BETA-red.svg)](#)
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/skytyphoni)
@@ -54,7 +63,7 @@ HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 ### À la main
 
 1. Copie `tile-placer-card.js` dans `/config/www/`.
-2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.9.5` en type **Module JavaScript**.
+2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.9.51` en type **Module JavaScript**.
 3. Change la valeur de `?v=` à chaque mise à jour : Home Assistant garde `/local/` en cache très longtemps.
 
 ## Démarrage rapide
