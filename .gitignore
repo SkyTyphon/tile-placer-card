@@ -2,3 +2,6 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+
+# Fichiers privés du projet (sauvegardes de dashboard, notes de reprise) : ne jamais publier
+_local/
