@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.54";
+const TPC_VERSION = "0.9.55";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -22,6 +22,7 @@ const ACTION_TYPES = [
 ];
 const SWITCH_ON_DEFAULT = "#ffc107"; // jaune
 const SWITCH_OFF_DEFAULT = "#9e9e9e"; // gris
+const ONOFF_DOMAINS = ["switch", "light"]; // entités avec couleurs allumé / éteint
 const COLOR_PRESETS = [
   ["#ffc107", "Jaune"], ["#ff9800", "Orange"], ["#f44336", "Rouge"], ["#4caf50", "Vert"],
   ["#2196f3", "Bleu"], ["#9c27b0", "Violet"], ["#ffffff", "Blanc"], ["#9e9e9e", "Gris"], ["#212121", "Noir"],
@@ -70,6 +71,11 @@ function newId() {
   return "t" + Math.random().toString(36).slice(2, 8);
 }
 
+function usesOnOffColors(entityId) {
+  const e = String(entityId || "");
+  return e.includes(".") && ONOFF_DOMAINS.includes(e.split(".")[0]);
+}
+
 function actionDefined(a) {
   return !!a && typeof a === "object" && a.action && a.action !== "none";
 }
@@ -95,7 +101,7 @@ function cleanTile(t) {
   for (const k of ACTION_KEYS) {
     if (out[k] && !actionDefined(out[k])) delete out[k];
   }
-  if (!String(out.entity || "").startsWith("switch.")) { delete out.color_on; delete out.color_off; }
+  if (!usesOnOffColors(out.entity)) { delete out.color_on; delete out.color_off; }
   if (out.shape === "circle") delete out.shape;
   if (out.shape !== "rectangle") delete out.width;
   out.x_pct = round2(clamp(Number(out.x_pct) || 0, 0, 100));
@@ -424,8 +430,8 @@ class TilePlacerCard extends HTMLElement {
       const unavailable = missing || (s && (s.state === "unavailable" || s.state === "unknown"));
       e.root.classList.toggle("unavailable", !!unavailable);
       e.root.classList.toggle("active", !!s && ACTIVE_STATES.includes(s.state));
-      // Entité switch : icône jaune allumée, grise éteinte (couleurs réglables par bulle).
-      const isSwitch = typeof t.entity === "string" && t.entity.startsWith("switch.");
+      // Entité switch ou light : icône jaune allumée, grise éteinte (couleurs réglables par bulle).
+      const isSwitch = usesOnOffColors(t.entity);
       e.root.classList.toggle("state-colored", isSwitch);
       if (isSwitch) {
         const on = !!s && s.state === "on";
@@ -895,7 +901,7 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     colorPick.value = /^#[0-9a-f]{6}$/i.test(tile.color || "") ? tile.color : "#ffa500";
     colorPick.addEventListener("input", () => { colorText.value = colorPick.value; this._live(tile, () => { tile.color = colorPick.value; }); });
 
-    // Couleurs on / off, visibles seulement quand l'entité est un switch.
+    // Couleurs on / off, visibles seulement quand l'entité est un switch ou une lumière.
     const isHex = (v) => /^#[0-9a-f]{6}$/i.test(v || "");
     const colorChooser = (label, key, def) => {
       const cur = String(tile[key] || def);
@@ -920,7 +926,7 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     const onRow = lbl("Couleur allumé (on)", colorChooser("Couleur allumé", "color_on", SWITCH_ON_DEFAULT));
     const offRow = lbl("Couleur éteint (off)", colorChooser("Couleur éteint", "color_off", SWITCH_OFF_DEFAULT));
     syncSwitch = () => {
-      const sw = String(tile.entity || "").startsWith("switch.");
+      const sw = usesOnOffColors(tile.entity);
       onRow.style.display = offRow.style.display = sw ? "" : "none";
     };
     syncSwitch();
