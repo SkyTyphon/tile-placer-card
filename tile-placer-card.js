@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.57";
+const TPC_VERSION = "0.9.58";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -22,10 +22,12 @@ const ACTION_TYPES = [
 ];
 const SWITCH_ON_DEFAULT = "#ffc107"; // jaune
 const SWITCH_OFF_DEFAULT = "#9e9e9e"; // gris
+const MOVING_DEFAULT = "#00bcd4"; // cyan : en mouvement
+const PARTIAL_DEFAULT = "#9c27b0"; // violet : volet entre 5 et 95 %
 const ONOFF_DOMAINS = ["switch", "light", "input_boolean", "fan", "binary_sensor", "cover"]; // entités avec couleurs allumé / éteint
 const COLOR_PRESETS = [
   ["#ffc107", "Jaune"], ["#ff9800", "Orange"], ["#f44336", "Rouge"], ["#4caf50", "Vert"],
-  ["#2196f3", "Bleu"], ["#9c27b0", "Violet"], ["#ffffff", "Blanc"], ["#9e9e9e", "Gris"], ["#212121", "Noir"],
+  ["#2196f3", "Bleu"], ["#9c27b0", "Violet"], ["#ffffff", "Blanc"], ["#9e9e9e", "Gris"], ["#212121", "Noir"], ["#00bcd4", "Cyan"],
 ];
 const ACTION_KEYS = ["tap_action", "double_tap_action", "hold_action"];
 const ACTION_LABELS = {
@@ -76,12 +78,6 @@ function usesOnOffColors(entityId) {
   return e.includes(".") && ONOFF_DOMAINS.includes(e.split(".")[0]);
 }
 
-/* État « actif » : on pour la plupart des entités, open ou opening pour un volet / une porte (cover). */
-function isActiveForColor(entityId, state) {
-  if (String(entityId || "").split(".")[0] === "cover") return state === "open" || state === "opening";
-  return state === "on";
-}
-
 function actionDefined(a) {
   return !!a && typeof a === "object" && a.action && a.action !== "none";
 }
@@ -107,7 +103,8 @@ function cleanTile(t) {
   for (const k of ACTION_KEYS) {
     if (out[k] && !actionDefined(out[k])) delete out[k];
   }
-  if (!usesOnOffColors(out.entity)) { delete out.color_on; delete out.color_off; }
+  if (!usesOnOffColors(out.entity)) { delete out.color_on; delete out.color_off; delete out.color_moving; delete out.color_partial; }
+  if (String(out.entity || "").split(".")[0] !== "cover") { delete out.color_moving; delete out.color_partial; }
   if (out.shape === "circle") delete out.shape;
   if (out.shape !== "rectangle") delete out.width;
   out.x_pct = round2(clamp(Number(out.x_pct) || 0, 0, 100));
@@ -415,6 +412,46 @@ class TilePlacerCard extends HTMLElement {
     return t.entity && this._hass ? this._hass.states[t.entity] : undefined;
   }
 
+  /* Couleurs par défaut selon le type d'entité : portes rouge ouvert / vert fermé, volets bleu ouvert / orange fermé,
+     autres entités jaune actif / gris inactif. */
+  _colorDefaults(entityId) {
+    const domain = String(entityId || "").split(".")[0];
+    const s = this._hass && this._hass.states ? this._hass.states[entityId] : null;
+    const dc = s && s.attributes ? s.attributes.device_class : undefined;
+    const base = { moving: MOVING_DEFAULT, partial: PARTIAL_DEFAULT };
+    if (domain === "cover") {
+      if (["door", "garage", "gate"].includes(dc)) return { ...base, kind: "door_cover", on: "#f44336", off: "#4caf50" };
+      return { ...base, kind: "shutter", on: "#2196f3", off: "#ff9800" };
+    }
+    if (domain === "binary_sensor" && ["door", "garage_door", "opening"].includes(dc)) {
+      return { ...base, kind: "door_sensor", on: "#f44336", off: "#4caf50" };
+    }
+    return { ...base, kind: "generic", on: SWITCH_ON_DEFAULT, off: SWITCH_OFF_DEFAULT };
+  }
+
+  _colorKindOf(entityId) {
+    return usesOnOffColors(entityId) ? this._colorDefaults(entityId).kind : "none";
+  }
+
+  _stateColor(t, s) {
+    const d = this._colorDefaults(t.entity);
+    const on = t.color_on || d.on;
+    const off = t.color_off || d.off;
+    const st = s ? s.state : null;
+    if (!st || st === "unavailable" || st === "unknown") return off;
+    if (String(t.entity).split(".")[0] === "cover") {
+      if (st === "opening" || st === "closing") return t.color_moving || d.moving;
+      const raw = s.attributes ? s.attributes.current_position : null;
+      const pos = raw === null || raw === undefined ? NaN : Number(raw);
+      if (Number.isFinite(pos)) {
+        if (pos > 5 && pos < 95) return t.color_partial || d.partial;
+        return pos >= 95 ? on : off;
+      }
+      return st === "open" ? on : off;
+    }
+    return st === "on" ? on : off;
+  }
+
   _stateText(t, s) {
     if (!t.entity) return "";
     if (!s) return "indisponible";
@@ -439,10 +476,7 @@ class TilePlacerCard extends HTMLElement {
       // Entité à deux états (switch, light, input_boolean, fan, binary_sensor, cover) : icône jaune quand elle est active, grise sinon (couleurs réglables par bulle).
       const isSwitch = usesOnOffColors(t.entity);
       e.root.classList.toggle("state-colored", isSwitch);
-      if (isSwitch) {
-        const on = !!s && isActiveForColor(t.entity, s.state);
-        e.root.style.setProperty("--tile-state-color", on ? (t.color_on || SWITCH_ON_DEFAULT) : (t.color_off || SWITCH_OFF_DEFAULT));
-      }
+      if (isSwitch) e.root.style.setProperty("--tile-state-color", this._stateColor(t, s));
 
       const name = t.name || (s && s.attributes && s.attributes.friendly_name) || (t.entity || "");
       e.label.textContent = name || "";
@@ -828,6 +862,12 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     }
     const curDev = this._deviceOf(tile.entity);
     let syncSwitch = () => {};
+    const entityChanged = (apply) => {
+      const before = this._colorKindOf(tile.entity);
+      this._live(tile, apply);
+      if (this._colorKindOf(tile.entity) !== before) this._renderPanel();
+      else syncSwitch();
+    };
     let entCtl;
     if (customElements.get("ha-entity-picker")) {
       entCtl = document.createElement("ha-entity-picker");
@@ -837,12 +877,12 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       if (curDev) entCtl.includeEntities = this._deviceEntities(curDev);
       entCtl.addEventListener("value-changed", (ev) => {
         const v = ev.detail.value || "";
-        if (v !== (tile.entity || "")) { this._live(tile, () => { tile.entity = v; }); syncSwitch(); }
+        if (v !== (tile.entity || "")) entityChanged(() => { tile.entity = v; });
       });
     } else {
       const dl = h("datalist", { id: "tpc-entities" });
       Object.keys((hass && hass.states) || {}).sort().slice(0, 3000).forEach((id) => dl.append(h("option", { value: id })));
-      entCtl = h("div", null, [text(tile.entity, (v) => { this._live(tile, () => { tile.entity = v.trim(); }); syncSwitch(); }, { list: "tpc-entities", placeholder: "light.salon" }), dl]);
+      entCtl = h("div", null, [text(tile.entity, (v) => entityChanged(() => { tile.entity = v.trim(); }), { list: "tpc-entities", placeholder: "light.salon" }), dl]);
     }
 
     const size = h("input", { type: "range", min: "20", max: "300", step: "2" });
@@ -929,11 +969,16 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       pick.addEventListener("input", () => set(pick.value));
       return h("div", { class: "inline" }, [sel, pick]);
     };
-    const onRow = lbl("Couleur quand actif (allumé, ouvert)", colorChooser("Couleur actif", "color_on", SWITCH_ON_DEFAULT));
-    const offRow = lbl("Couleur quand inactif (éteint, fermé)", colorChooser("Couleur inactif", "color_off", SWITCH_OFF_DEFAULT));
+    const cd = this._colorDefaults(tile.entity);
+    const onRow = lbl("Couleur quand actif (allumé, ouvert)", colorChooser("Couleur actif", "color_on", cd.on));
+    const offRow = lbl("Couleur quand inactif (éteint, fermé)", colorChooser("Couleur inactif", "color_off", cd.off));
+    const movingRow = lbl("Couleur en mouvement (ouverture, fermeture)", colorChooser("Couleur en mouvement", "color_moving", cd.moving));
+    const partialRow = lbl("Couleur entre 5 et 95 % (volet)", colorChooser("Couleur entre 5 et 95 %", "color_partial", cd.partial));
     syncSwitch = () => {
       const sw = usesOnOffColors(tile.entity);
+      const cover = String(tile.entity || "").split(".")[0] === "cover";
       onRow.style.display = offRow.style.display = sw ? "" : "none";
+      movingRow.style.display = partialRow.style.display = sw && cover ? "" : "none";
     };
     syncSwitch();
 
@@ -997,6 +1042,8 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
         lbl("Couleur de l'icône", h("div", { class: "inline" }, [colorText, colorPick])),
         onRow,
         offRow,
+        movingRow,
+        partialRow,
       ]),
       check(tile.show_state === true, (v) => this._live(tile, () => { tile.show_state = v; }), "Afficher l'état sous la bulle"),
       check(tile.transparent, (v) => this._live(tile, () => { tile.transparent = v; }), "Fond transparent (icône seule)"),
