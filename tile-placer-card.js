@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.53";
+const TPC_VERSION = "0.9.54";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -19,6 +19,12 @@ const ACTION_TYPES = [
   ["call-service", "Appeler un service"],
   ["navigate", "Naviguer"],
   ["url", "Ouvrir une URL"],
+];
+const SWITCH_ON_DEFAULT = "#ffc107"; // jaune
+const SWITCH_OFF_DEFAULT = "#9e9e9e"; // gris
+const COLOR_PRESETS = [
+  ["#ffc107", "Jaune"], ["#ff9800", "Orange"], ["#f44336", "Rouge"], ["#4caf50", "Vert"],
+  ["#2196f3", "Bleu"], ["#9c27b0", "Violet"], ["#ffffff", "Blanc"], ["#9e9e9e", "Gris"], ["#212121", "Noir"],
 ];
 const ACTION_KEYS = ["tap_action", "double_tap_action", "hold_action"];
 const ACTION_LABELS = {
@@ -89,6 +95,7 @@ function cleanTile(t) {
   for (const k of ACTION_KEYS) {
     if (out[k] && !actionDefined(out[k])) delete out[k];
   }
+  if (!String(out.entity || "").startsWith("switch.")) { delete out.color_on; delete out.color_off; }
   if (out.shape === "circle") delete out.shape;
   if (out.shape !== "rectangle") delete out.width;
   out.x_pct = round2(clamp(Number(out.x_pct) || 0, 0, 100));
@@ -120,6 +127,7 @@ ha-card { overflow: hidden; overflow: clip; position: relative; }
   border: 1px solid var(--divider-color); box-shadow: 0 1px 4px rgba(0,0,0,.25); color: var(--secondary-text-color); }
 .tile.active .bubble { color: var(--tile-color, var(--state-icon-active-color, var(--primary-color))); }
 .tile.has-color .bubble { color: var(--tile-color); }
+.tile.state-colored .bubble { color: var(--tile-state-color); }
 .tile.unavailable .bubble { opacity: .55; border-style: dashed; }
 .tile .label, .tile .state { max-width: 100%; text-align: center; line-height: 1.15; padding: 0 4px; border-radius: 6px;
   background: color-mix(in srgb, var(--card-background-color, #fff) 75%, transparent);
@@ -416,6 +424,13 @@ class TilePlacerCard extends HTMLElement {
       const unavailable = missing || (s && (s.state === "unavailable" || s.state === "unknown"));
       e.root.classList.toggle("unavailable", !!unavailable);
       e.root.classList.toggle("active", !!s && ACTIVE_STATES.includes(s.state));
+      // Entité switch : icône jaune allumée, grise éteinte (couleurs réglables par bulle).
+      const isSwitch = typeof t.entity === "string" && t.entity.startsWith("switch.");
+      e.root.classList.toggle("state-colored", isSwitch);
+      if (isSwitch) {
+        const on = !!s && s.state === "on";
+        e.root.style.setProperty("--tile-state-color", on ? (t.color_on || SWITCH_ON_DEFAULT) : (t.color_off || SWITCH_OFF_DEFAULT));
+      }
 
       const name = t.name || (s && s.attributes && s.attributes.friendly_name) || (t.entity || "");
       e.label.textContent = name || "";
@@ -800,6 +815,7 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       iconCtl = text(tile.icon, (v) => this._live(tile, () => { tile.icon = v.trim(); }), { placeholder: "mdi:lightbulb" });
     }
     const curDev = this._deviceOf(tile.entity);
+    let syncSwitch = () => {};
     let entCtl;
     if (customElements.get("ha-entity-picker")) {
       entCtl = document.createElement("ha-entity-picker");
@@ -809,12 +825,12 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
       if (curDev) entCtl.includeEntities = this._deviceEntities(curDev);
       entCtl.addEventListener("value-changed", (ev) => {
         const v = ev.detail.value || "";
-        if (v !== (tile.entity || "")) this._live(tile, () => { tile.entity = v; });
+        if (v !== (tile.entity || "")) { this._live(tile, () => { tile.entity = v; }); syncSwitch(); }
       });
     } else {
       const dl = h("datalist", { id: "tpc-entities" });
       Object.keys((hass && hass.states) || {}).sort().slice(0, 3000).forEach((id) => dl.append(h("option", { value: id })));
-      entCtl = h("div", null, [text(tile.entity, (v) => this._live(tile, () => { tile.entity = v.trim(); }), { list: "tpc-entities", placeholder: "light.salon" }), dl]);
+      entCtl = h("div", null, [text(tile.entity, (v) => { this._live(tile, () => { tile.entity = v.trim(); }); syncSwitch(); }, { list: "tpc-entities", placeholder: "light.salon" }), dl]);
     }
 
     const size = h("input", { type: "range", min: "20", max: "300", step: "2" });
@@ -879,6 +895,36 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     colorPick.value = /^#[0-9a-f]{6}$/i.test(tile.color || "") ? tile.color : "#ffa500";
     colorPick.addEventListener("input", () => { colorText.value = colorPick.value; this._live(tile, () => { tile.color = colorPick.value; }); });
 
+    // Couleurs on / off, visibles seulement quand l'entité est un switch.
+    const isHex = (v) => /^#[0-9a-f]{6}$/i.test(v || "");
+    const colorChooser = (label, key, def) => {
+      const cur = String(tile[key] || def);
+      const preset = COLOR_PRESETS.find(([v]) => v === cur.toLowerCase());
+      const sel = h("select", { "aria-label": label });
+      for (const [v, l] of [...COLOR_PRESETS, ["custom", "Personnalisée…"]]) {
+        const o = h("option", { value: v, text: l });
+        if (preset ? preset[0] === v : v === "custom") o.selected = true;
+        sel.append(o);
+      }
+      const pick = h("input", { type: "color", "aria-label": label + " (personnalisée)" });
+      pick.value = isHex(cur) ? cur : def;
+      pick.style.display = preset ? "none" : "";
+      const set = (v) => this._live(tile, () => { if (v.toLowerCase() === def) delete tile[key]; else tile[key] = v; });
+      sel.addEventListener("change", () => {
+        if (sel.value === "custom") { pick.style.display = ""; set(pick.value); }
+        else { pick.style.display = "none"; set(sel.value); }
+      });
+      pick.addEventListener("input", () => set(pick.value));
+      return h("div", { class: "inline" }, [sel, pick]);
+    };
+    const onRow = lbl("Couleur allumé (on)", colorChooser("Couleur allumé", "color_on", SWITCH_ON_DEFAULT));
+    const offRow = lbl("Couleur éteint (off)", colorChooser("Couleur éteint", "color_off", SWITCH_OFF_DEFAULT));
+    syncSwitch = () => {
+      const sw = String(tile.entity || "").startsWith("switch.");
+      onRow.style.display = offRow.style.display = sw ? "" : "none";
+    };
+    syncSwitch();
+
     // actions : validées par un bouton (JSON, service)
     const draft = { tap_action: tile.tap_action, double_tap_action: tile.double_tap_action, hold_action: tile.hold_action };
     for (const k of ACTION_KEYS) draft[k] = draft[k] ? clone(draft[k]) : { action: "default" };
@@ -937,6 +983,8 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
         lbl("Taille (hauteur)", h("div", { class: "inline" }, [size, sizeVal])),
         widthRow,
         lbl("Couleur de l'icône", h("div", { class: "inline" }, [colorText, colorPick])),
+        onRow,
+        offRow,
       ]),
       check(tile.show_state === true, (v) => this._live(tile, () => { tile.show_state = v; }), "Afficher l'état sous la bulle"),
       check(tile.transparent, (v) => this._live(tile, () => { tile.transparent = v; }), "Fond transparent (icône seule)"),

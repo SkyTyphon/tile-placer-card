@@ -63,7 +63,7 @@ HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 ### À la main
 
 1. Copie `tile-placer-card.js` dans `/config/www/`.
-2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.9.53` en type **Module JavaScript**.
+2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.9.54` en type **Module JavaScript**.
 3. Change la valeur de `?v=` à chaque mise à jour : Home Assistant garde `/local/` en cache très longtemps.
 
 ## Démarrage rapide
@@ -123,6 +123,7 @@ Clique sur une bulle (sans la déplacer) pour la sélectionner : un panneau flot
 | Largeur | Pour la forme rectangle seulement, de 20 à 400 px. |
 | Couleur de l'icône | Couleur CSS, variable de thème, ou sélecteur de couleur. |
 | Afficher l'état sous la bulle | Ajoute l'état de l'entité sous la bulle. |
+| Couleur allumé (on) / éteint (off) | Apparaissent seulement quand l'entité est un `switch`. Liste de couleurs (jaune, orange, rouge, vert, bleu, violet, blanc, gris, noir) ou couleur personnalisée. Par défaut : jaune allumé, gris éteint. |
 | Fond transparent | Icône seule, sans disque de fond. |
 | Actions | Clic, double clic, appui long (voir [Actions](#actions)). |
 | Supprimer la bulle | Retire la bulle après confirmation. |
@@ -193,7 +194,8 @@ D'autres exemples sont dans [`examples/basic.yaml`](examples/basic.yaml).
 | `shape` | `circle` (défaut), `rounded`, `square` ou `rectangle`. |
 | `size` | Taille (hauteur) de la bulle en px (défaut 48, de 20 à 300). |
 | `width` | Largeur en px, utilisée seulement avec `shape: rectangle` (défaut : 1,6 fois `size`). |
-| `color` | Couleur CSS ou variable, appliquée à l'icône. |
+| `color` | Couleur CSS ou variable, appliquée à l'icône (sauf pour un `switch`, voir `color_on` et `color_off`). |
+| `color_on`, `color_off` | Pour une entité `switch.*` : couleur de l'icône allumée et éteinte (défaut `#ffc107` jaune et `#9e9e9e` gris). |
 | `label_mode` | `hover`, `always` ou `never` pour cette bulle. |
 | `show_state` | `true` affiche l'état de l'entité sous la bulle (défaut `false`). |
 | `transparent` | `true` : icône seule, sans fond. |
