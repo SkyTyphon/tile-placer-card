@@ -17,6 +17,8 @@
 
 [![Ouvrir ton Home Assistant et ajouter ce dépôt dans HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SkyTyphon&repository=tile-placer-card&category=plugin)
 
+⭐ **Si la carte te plaît, une étoile sur GitHub (bouton « Star » en haut de la page) aide à la faire connaître. Merci !** Si le lien s'ouvre dans une application (Facebook, etc.), ouvre-le plutôt dans ton navigateur habituel, pour être connecté à GitHub.
+
 Carte Lovelace (JavaScript natif, un seul fichier, sans build, sans dépendance) qui pose des **bulles** (icône MDI, nom, état d'une entité) sur une **image de fond**, par exemple le plan de ta maison. Les bulles se placent en pourcentage, se déplacent **directement sur la carte** à la souris ou au doigt, et se configurent une par une (nom, icône, entité, taille, couleur, actions au clic, au double clic et à l'appui long) dans un panneau qui s'ouvre sur le plan. Les modifications sont enregistrées dans le dashboard.
 
 Elle s'inspire de l'add-on HA Views, mais elle est livrée sous forme de carte.
