@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.52";
+const TPC_VERSION = "0.9.53";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -1383,7 +1383,7 @@ const EDITOR_HELPERS = {
   background: "Place l'image dans /config/www/ : le fichier plan.png s'écrit /local/plan.png.",
   aspect_ratio: "Laisse vide : les proportions sont lues sur l'image. Sinon, ex. 1200:896.",
   fit_screen: "Conseillé dans une vue de type « Panneau ».",
-  switch_path: "Ajoute un bouton en haut à gauche. Ex. /dashboard-maison/0 : seul le dernier mot de l'adresse change selon ton dashboard.",
+  switch_path: "Ajoute un bouton en haut à gauche. Ex. /my-dashboard/0 : seul le dernier mot de l'adresse change selon ton dashboard.",
 };
 const EDITOR_SCHEMA = [
   { name: "title", selector: { text: {} } },

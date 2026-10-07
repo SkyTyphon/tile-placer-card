@@ -63,7 +63,7 @@ HACS registers the resource automatically, and updates also go through HACS.
 ### Manual
 
 1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.9.52` as a **JavaScript module**.
+2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.9.53` as a **JavaScript module**.
 3. Change the `?v=` value after each update: Home Assistant caches `/local/` for a very long time.
 
 ## Quick start
@@ -177,7 +177,7 @@ More examples in [`examples/basic.yaml`](examples/basic.yaml).
 | `label_mode` | Default name display: `hover` (default), `always`, `never`. |
 | `title` | Card title. Optional. |
 | `editable` | `false` hides the pencil (default `true`). Editing also requires an administrator account. |
-| `switch_path` | Address of another plan (e.g. `/dashboard-maison/0`). Adds a button at the top left to switch to it. Optional. |
+| `switch_path` | Address of another plan (e.g. `/my-dashboard/0`). Adds a button at the top left to switch to it. Optional. |
 | `switch_label` | Text of the switch button. Optional. |
 | `tiles` | List of bubbles. |
 
@@ -233,13 +233,13 @@ hold_action:
 
 ## Switching between an old plan and this card
 
-If you already have a `picture-elements` plan and want to move between the two, link them with a button in each direction. Only the **last part of the address** depends on your dashboard (`/dashboard-maison/0`, `/energy/plan`…): take your page's address from the browser bar.
+If you already have a `picture-elements` plan and want to move between the two, link them with a button in each direction. Only the **last part of the address** depends on your dashboard (`/my-dashboard/0`, `/energy/plan`…): take your page's address from the browser bar.
 
 - **From this card to the other plan**: set `switch_path` (the "Lien vers un autre plan" field of the visual editor):
 
   ```yaml
   type: custom:tile-placer-card
-  switch_path: /dashboard-maison/0
+  switch_path: /my-dashboard/0
   switch_label: Old plan
   ```
 
@@ -254,7 +254,7 @@ If you already have a `picture-elements` plan and want to move between the two, 
       left: 3%
     tap_action:
       action: navigate
-      navigation_path: /dashboard-maison/plan-editable
+      navigation_path: /my-dashboard/plan-editable
   ```
 
 ## Tips
