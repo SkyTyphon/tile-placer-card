@@ -63,7 +63,7 @@ HACS registers the resource automatically, and updates also go through HACS.
 ### Manual
 
 1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.9.55` as a **JavaScript module**.
+2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.9.56` as a **JavaScript module**.
 3. Change the `?v=` value after each update: Home Assistant caches `/local/` for a very long time.
 
 ## Quick start
@@ -123,7 +123,7 @@ Click a bubble (without dragging it) to select it: a floating panel opens on the
 | Width | Rectangle shape only, 20 to 400 px. |
 | Icon colour | CSS colour, theme variable, or colour picker. |
 | Show state under the bubble | Adds the entity state under the bubble. |
-| On / off colour | Only shown when the entity is a `switch` or a `light`. A list of colours (yellow, orange, red, green, blue, purple, white, grey, black) or a custom colour. Default: yellow when on, grey when off. |
+| On / off colour | Only shown when the entity is a `switch`, a `light`, an `input_boolean` or a `fan`. A list of colours (yellow, orange, red, green, blue, purple, white, grey, black) or a custom colour. Default: yellow when on, grey when off. |
 | Transparent background | Icon only, no background disc. |
 | Actions | Tap, double tap, hold (see [Actions](#actions)). |
 | Delete bubble | Removes the bubble after confirmation. |
@@ -194,8 +194,8 @@ More examples in [`examples/basic.yaml`](examples/basic.yaml).
 | `shape` | `circle` (default), `rounded`, `square` or `rectangle`. |
 | `size` | Bubble size (height) in px (default 48, 20 to 300). |
 | `width` | Width in px, used only with `shape: rectangle` (default: 1.6 times `size`). |
-| `color` | Any CSS colour or variable, applied to the icon (except for a `switch` or a `light`, see `color_on` and `color_off`). |
-| `color_on`, `color_off` | For a `switch.*` or `light.*` entity: icon colour when on and when off (default `#ffc107` yellow and `#9e9e9e` grey). |
+| `color` | Any CSS colour or variable, applied to the icon (except for a `switch`, `light`, `input_boolean` or `fan`, see `color_on` and `color_off`). |
+| `color_on`, `color_off` | For a `switch.*`, `light.*`, `input_boolean.*` or `fan.*` entity: icon colour when on and when off (default `#ffc107` yellow and `#9e9e9e` grey). |
 | `label_mode` | `hover`, `always` or `never` for this bubble. |
 | `show_state` | `true` shows the entity state under the bubble (default `false`). |
 | `transparent` | `true`: icon only, no background. |

@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.55";
+const TPC_VERSION = "0.9.56";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -22,7 +22,7 @@ const ACTION_TYPES = [
 ];
 const SWITCH_ON_DEFAULT = "#ffc107"; // jaune
 const SWITCH_OFF_DEFAULT = "#9e9e9e"; // gris
-const ONOFF_DOMAINS = ["switch", "light"]; // entités avec couleurs allumé / éteint
+const ONOFF_DOMAINS = ["switch", "light", "input_boolean", "fan"]; // entités avec couleurs allumé / éteint
 const COLOR_PRESETS = [
   ["#ffc107", "Jaune"], ["#ff9800", "Orange"], ["#f44336", "Rouge"], ["#4caf50", "Vert"],
   ["#2196f3", "Bleu"], ["#9c27b0", "Violet"], ["#ffffff", "Blanc"], ["#9e9e9e", "Gris"], ["#212121", "Noir"],
@@ -430,7 +430,7 @@ class TilePlacerCard extends HTMLElement {
       const unavailable = missing || (s && (s.state === "unavailable" || s.state === "unknown"));
       e.root.classList.toggle("unavailable", !!unavailable);
       e.root.classList.toggle("active", !!s && ACTIVE_STATES.includes(s.state));
-      // Entité switch ou light : icône jaune allumée, grise éteinte (couleurs réglables par bulle).
+      // Entité switch, light, input_boolean ou fan : icône jaune allumée, grise éteinte (couleurs réglables par bulle).
       const isSwitch = usesOnOffColors(t.entity);
       e.root.classList.toggle("state-colored", isSwitch);
       if (isSwitch) {
@@ -901,7 +901,7 @@ Si le dashboard « ${path} » a été créé vide, supprime-le dans Paramètres,
     colorPick.value = /^#[0-9a-f]{6}$/i.test(tile.color || "") ? tile.color : "#ffa500";
     colorPick.addEventListener("input", () => { colorText.value = colorPick.value; this._live(tile, () => { tile.color = colorPick.value; }); });
 
-    // Couleurs on / off, visibles seulement quand l'entité est un switch ou une lumière.
+    // Couleurs on / off, visibles seulement quand l'entité est un switch, une lumière, un input_boolean ou un ventilateur.
     const isHex = (v) => /^#[0-9a-f]{6}$/i.test(v || "");
     const colorChooser = (label, key, def) => {
       const cur = String(tile[key] || def);
