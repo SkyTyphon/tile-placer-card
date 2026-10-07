@@ -63,7 +63,7 @@ HACS registers the resource automatically, and updates also go through HACS.
 ### Manual
 
 1. Copy `tile-placer-card.js` to `/config/www/`.
-2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.9.58` as a **JavaScript module**.
+2. Go to Settings, Dashboards, ⋮ menu, **Resources**, and add `/local/tile-placer-card.js?v=0.9.59` as a **JavaScript module**.
 3. Change the `?v=` value after each update: Home Assistant caches `/local/` for a very long time.
 
 ## Quick start
@@ -123,7 +123,7 @@ Click a bubble (without dragging it) to select it: a floating panel opens on the
 | Width | Rectangle shape only, 20 to 400 px. |
 | Icon colour | CSS colour, theme variable, or colour picker. |
 | Show state under the bubble | Adds the entity state under the bubble. |
-| Colour when active (on, open) / inactive (off, closed) | Only shown for a two-state entity: `switch`, `light`, `input_boolean`, `fan`, `binary_sensor` or `cover` (active = `on`, or `open` for a `cover`). A `cover` also gets two more colours: moving (`opening`, `closing`) and between 5 and 95 % open. A list of colours (yellow, orange, red, green, blue, purple, white, grey, black) or a custom colour. Default: yellow when active, grey when inactive; **doors** (`binary_sensor` of class `door`, `garage_door`, `opening`, `cover` of class `door`, `garage`, `gate`) red when open and green when closed; **shutters** (other `cover` entities) blue when open, orange when closed, purple between 5 and 95 %, cyan while moving. |
+| Colour when active (on, open) / inactive (off, closed) | Only shown for a two-state entity: `switch`, `light`, `input_boolean`, `fan`, `binary_sensor` or `cover` (active = `on`, or `open` for a `cover`). A `cover` also gets two more colours: moving (`opening`, `closing`) and between 5 and 95 % open. A list of colours (yellow, orange, red, green, blue, purple, white, grey, black) or a custom colour. Default: yellow when active, grey when inactive; **doors and windows** (`binary_sensor` of class `door`, `garage_door`, `opening`, `window`; `cover` of class `door`, `garage`, `gate`, `window`) red when open and green when closed; **shutters** (other `cover` entities) blue when open, orange when closed, purple between 5 and 95 %, cyan while moving. |
 | Transparent background | Icon only, no background disc. |
 | Actions | Tap, double tap, hold (see [Actions](#actions)). |
 | Delete bubble | Removes the bubble after confirmation. |

@@ -63,7 +63,7 @@ HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 ### À la main
 
 1. Copie `tile-placer-card.js` dans `/config/www/`.
-2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.9.58` en type **Module JavaScript**.
+2. Va dans Paramètres, Tableaux de bord, menu ⋮, **Ressources**, et ajoute `/local/tile-placer-card.js?v=0.9.59` en type **Module JavaScript**.
 3. Change la valeur de `?v=` à chaque mise à jour : Home Assistant garde `/local/` en cache très longtemps.
 
 ## Démarrage rapide
@@ -123,7 +123,7 @@ Clique sur une bulle (sans la déplacer) pour la sélectionner : un panneau flot
 | Largeur | Pour la forme rectangle seulement, de 20 à 400 px. |
 | Couleur de l'icône | Couleur CSS, variable de thème, ou sélecteur de couleur. |
 | Afficher l'état sous la bulle | Ajoute l'état de l'entité sous la bulle. |
-| Couleur quand actif (allumé, ouvert) / inactif (éteint, fermé) | Apparaissent seulement pour une entité à deux états : `switch`, `light`, `input_boolean`, `fan`, `binary_sensor` ou `cover` (actif = `on`, ou `open` pour un `cover`). Pour un `cover`, deux couleurs en plus : en mouvement (`opening`, `closing`) et entre 5 et 95 % d'ouverture. Liste de couleurs (jaune, orange, rouge, vert, bleu, violet, blanc, gris, noir) ou couleur personnalisée. Par défaut : jaune actif et gris inactif ; **portes** (`binary_sensor` de classe `door`, `garage_door`, `opening`, `cover` de classe `door`, `garage`, `gate`) rouge ouvert et vert fermé ; **volets** (autres `cover`) bleu ouvert, orange fermé, violet entre 5 et 95 %, cyan en mouvement. |
+| Couleur quand actif (allumé, ouvert) / inactif (éteint, fermé) | Apparaissent seulement pour une entité à deux états : `switch`, `light`, `input_boolean`, `fan`, `binary_sensor` ou `cover` (actif = `on`, ou `open` pour un `cover`). Pour un `cover`, deux couleurs en plus : en mouvement (`opening`, `closing`) et entre 5 et 95 % d'ouverture. Liste de couleurs (jaune, orange, rouge, vert, bleu, violet, blanc, gris, noir) ou couleur personnalisée. Par défaut : jaune actif et gris inactif ; **portes et fenêtres** (`binary_sensor` de classe `door`, `garage_door`, `opening`, `window` ; `cover` de classe `door`, `garage`, `gate`, `window`) rouge ouvert et vert fermé ; **volets** (autres `cover`) bleu ouvert, orange fermé, violet entre 5 et 95 %, cyan en mouvement. |
 | Fond transparent | Icône seule, sans disque de fond. |
 | Actions | Clic, double clic, appui long (voir [Actions](#actions)). |
 | Supprimer la bulle | Retire la bulle après confirmation. |

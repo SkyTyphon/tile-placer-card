@@ -4,7 +4,7 @@
  * déplaçables en pourcentages, éditables, sauvegardées dans la config Lovelace (mode stockage).
  * Documentation, options et limites connues : README.md. Licence MIT.
  */
-const TPC_VERSION = "0.9.58";
+const TPC_VERSION = "0.9.59";
 const HOLD_MS = 500;
 const DOUBLE_MS = 250;
 const DRAG_THRESHOLD = 4;
@@ -412,7 +412,7 @@ class TilePlacerCard extends HTMLElement {
     return t.entity && this._hass ? this._hass.states[t.entity] : undefined;
   }
 
-  /* Couleurs par défaut selon le type d'entité : portes rouge ouvert / vert fermé, volets bleu ouvert / orange fermé,
+  /* Couleurs par défaut selon le type d'entité : portes et fenêtres rouge ouvert / vert fermé, volets bleu ouvert / orange fermé,
      autres entités jaune actif / gris inactif. */
   _colorDefaults(entityId) {
     const domain = String(entityId || "").split(".")[0];
@@ -420,10 +420,10 @@ class TilePlacerCard extends HTMLElement {
     const dc = s && s.attributes ? s.attributes.device_class : undefined;
     const base = { moving: MOVING_DEFAULT, partial: PARTIAL_DEFAULT };
     if (domain === "cover") {
-      if (["door", "garage", "gate"].includes(dc)) return { ...base, kind: "door_cover", on: "#f44336", off: "#4caf50" };
+      if (["door", "garage", "gate", "window"].includes(dc)) return { ...base, kind: "door_cover", on: "#f44336", off: "#4caf50" };
       return { ...base, kind: "shutter", on: "#2196f3", off: "#ff9800" };
     }
-    if (domain === "binary_sensor" && ["door", "garage_door", "opening"].includes(dc)) {
+    if (domain === "binary_sensor" && ["door", "garage_door", "opening", "window"].includes(dc)) {
       return { ...base, kind: "door_sensor", on: "#f44336", off: "#4caf50" };
     }
     return { ...base, kind: "generic", on: SWITCH_ON_DEFAULT, off: SWITCH_OFF_DEFAULT };
