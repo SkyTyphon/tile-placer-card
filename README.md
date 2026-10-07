@@ -123,10 +123,38 @@ Clique sur une bulle (sans la déplacer) pour la sélectionner : un panneau flot
 | Largeur | Pour la forme rectangle seulement, de 20 à 400 px. |
 | Couleur de l'icône | Couleur CSS, variable de thème, ou sélecteur de couleur. |
 | Afficher l'état sous la bulle | Ajoute l'état de l'entité sous la bulle. |
-| Couleur quand actif (allumé, ouvert) / inactif (éteint, fermé) | Apparaissent seulement pour une entité à deux états : `switch`, `light`, `input_boolean`, `fan`, `binary_sensor` ou `cover` (actif = `on`, ou `open` pour un `cover`). Pour un `cover`, deux couleurs en plus : en mouvement (`opening`, `closing`) et entre 5 et 95 % d'ouverture. Liste de couleurs (jaune, orange, rouge, vert, bleu, violet, blanc, gris, noir) ou couleur personnalisée. Par défaut : jaune actif et gris inactif ; **portes et fenêtres** (`binary_sensor` de classe `door`, `garage_door`, `opening`, `window` ; `cover` de classe `door`, `garage`, `gate`, `window`) rouge ouvert et vert fermé ; **volets** (autres `cover`) bleu ouvert, orange fermé, violet entre 5 et 95 %, cyan en mouvement. |
+| Couleurs d'état | Pour un `switch`, `light`, `input_boolean`, `fan`, `binary_sensor` ou `cover` : couleur selon l'état (actif, inactif, en mouvement). Voir [Changer la couleur d'une bulle](#changer-la-couleur-dune-bulle). |
 | Fond transparent | Icône seule, sans disque de fond. |
 | Actions | Clic, double clic, appui long (voir [Actions](#actions)). |
 | Supprimer la bulle | Retire la bulle après confirmation. |
+
+### Changer la couleur d'une bulle
+
+Il y a deux réglages de couleur, dans le panneau de la bulle :
+
+- **Couleur de l'icône** : une couleur fixe, choisie à la main, pour une bulle sans état à suivre.
+- **Couleurs d'état** : l'icône change de couleur selon l'état de l'entité (allumé ou éteint, ouvert ou fermé…). Elles n'apparaissent que si l'entité est d'un type à deux états : `switch`, `light`, `input_boolean`, `fan`, `binary_sensor` ou `cover`. Pour ces types, ce sont elles qui décident de la couleur.
+
+Pour les modifier :
+
+1. Ouvre le mode édition (crayon), puis clique sur la bulle **sans la déplacer** : son panneau s'ouvre.
+2. Vérifie qu'une **entité** est choisie (champ « Entité », ou choisis un « Appareil »). Sans entité, il n'y a pas de couleur d'état.
+3. Fais défiler le panneau jusqu'aux listes sous « Couleur de l'icône » :
+   - « Couleur quand actif (allumé, ouvert) » ;
+   - « Couleur quand inactif (éteint, fermé) » ;
+   - pour un `cover` (volet, porte de garage…), en plus : « Couleur en mouvement » et « Couleur entre 5 et 95 % (volet) ».
+4. Ouvre la liste et choisis une couleur (jaune, orange, rouge, vert, bleu, violet, blanc, gris, noir, cyan). Pour une autre teinte, choisis **Personnalisée…** : un carré de couleur apparaît à côté de la liste, clique dessus pour choisir. La bulle change tout de suite.
+5. Clique sur **Enregistrer** dans la barre d'outils. Sans cela, le changement n'est pas gardé.
+
+Couleurs par défaut, sans rien régler :
+
+| Type d'entité | Actif / ouvert | Inactif / fermé | En mouvement | Entre 5 et 95 % |
+|---|---|---|---|---|
+| `switch`, `light`, `input_boolean`, `fan`, autres `binary_sensor` | jaune | gris | | |
+| Portes et fenêtres : `binary_sensor` de classe `door`, `garage_door`, `opening`, `window` ; `cover` de classe `door`, `garage`, `gate`, `window` | rouge | vert | cyan (`cover`) | violet (`cover` avec position) |
+| Volets : autres `cover` | bleu | orange | cyan | violet |
+
+Pour un `cover` avec position, « actif » veut dire position à 95 % ou plus et « inactif » position à 5 % ou moins ; sans position, « actif » veut dire état `open`. Pendant `opening` et `closing`, la couleur « en mouvement » passe avant les autres. Un état indisponible prend la couleur d'inactif. Si les listes n'apparaissent pas : l'entité n'est pas d'un des types ci-dessus, ou la version de la carte est ancienne (Ctrl+F5, la version s'affiche dans la barre d'outils). Dans le fichier de configuration, ces choix sont `color_on`, `color_off`, `color_moving` et `color_partial` ; choisir la couleur par défaut n'écrit rien.
 
 **Redimensionner à la main :** une bulle sélectionnée affiche une poignée carrée en bas à droite. Glisse-la pour agrandir ou réduire la bulle (pour un rectangle, la largeur et la hauteur suivent séparément). Les curseurs du panneau donnent la même chose, plus précisément.
 

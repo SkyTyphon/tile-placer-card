@@ -123,10 +123,38 @@ Click a bubble (without dragging it) to select it: a floating panel opens on the
 | Width | Rectangle shape only, 20 to 400 px. |
 | Icon colour | CSS colour, theme variable, or colour picker. |
 | Show state under the bubble | Adds the entity state under the bubble. |
-| Colour when active (on, open) / inactive (off, closed) | Only shown for a two-state entity: `switch`, `light`, `input_boolean`, `fan`, `binary_sensor` or `cover` (active = `on`, or `open` for a `cover`). A `cover` also gets two more colours: moving (`opening`, `closing`) and between 5 and 95 % open. A list of colours (yellow, orange, red, green, blue, purple, white, grey, black) or a custom colour. Default: yellow when active, grey when inactive; **doors and windows** (`binary_sensor` of class `door`, `garage_door`, `opening`, `window`; `cover` of class `door`, `garage`, `gate`, `window`) red when open and green when closed; **shutters** (other `cover` entities) blue when open, orange when closed, purple between 5 and 95 %, cyan while moving. |
+| State colours | For a `switch`, `light`, `input_boolean`, `fan`, `binary_sensor` or `cover`: colour by state (active, inactive, moving). See [Changing a bubble's colour](#changing-a-bubbles-colour). |
 | Transparent background | Icon only, no background disc. |
 | Actions | Tap, double tap, hold (see [Actions](#actions)). |
 | Delete bubble | Removes the bubble after confirmation. |
+
+### Changing a bubble's colour
+
+There are two colour settings in the bubble panel:
+
+- **Icon colour**: a fixed colour you pick by hand, for a bubble with no state to follow.
+- **State colours**: the icon changes colour with the entity state (on or off, open or closed…). They only appear when the entity is a two-state type: `switch`, `light`, `input_boolean`, `fan`, `binary_sensor` or `cover`. For these types, they decide the colour.
+
+To change them:
+
+1. Enter edit mode (pencil), then click the bubble **without dragging it**: its panel opens.
+2. Check that an **entity** is set (the "Entité" field, or pick a "Appareil"). With no entity there is no state colour.
+3. Scroll the panel to the lists under "Couleur de l'icône":
+   - "Couleur quand actif (allumé, ouvert)" (colour when active: on, open);
+   - "Couleur quand inactif (éteint, fermé)" (colour when inactive: off, closed);
+   - for a `cover` (shutter, garage door…), also "Couleur en mouvement" (moving) and "Couleur entre 5 et 95 % (volet)" (between 5 and 95 %).
+4. Open the list and pick a colour (yellow, orange, red, green, blue, purple, white, grey, black, cyan). For another shade, pick **Personnalisée…** (custom): a colour square appears next to the list, click it to choose. The bubble updates immediately.
+5. Click **Save** in the toolbar. Otherwise the change is not kept.
+
+Default colours, with nothing set:
+
+| Entity type | Active / open | Inactive / closed | Moving | Between 5 and 95 % |
+|---|---|---|---|---|
+| `switch`, `light`, `input_boolean`, `fan`, other `binary_sensor` | yellow | grey | | |
+| Doors and windows: `binary_sensor` of class `door`, `garage_door`, `opening`, `window`; `cover` of class `door`, `garage`, `gate`, `window` | red | green | cyan (`cover`) | purple (`cover` with a position) |
+| Shutters: other `cover` entities | blue | orange | cyan | purple |
+
+For a `cover` with a position, "active" means a position of 95 % or more and "inactive" a position of 5 % or less; with no position, "active" means the `open` state. While `opening` or `closing`, the "moving" colour takes priority. An unavailable state uses the inactive colour. If the lists do not appear: the entity is not one of the types above, or the card version is old (Ctrl+F5; the version is shown in the toolbar). In the configuration, these choices are `color_on`, `color_off`, `color_moving` and `color_partial`; picking the default colour writes nothing.
 
 **Resizing by hand:** a selected bubble shows a square handle at its bottom right. Drag it to grow or shrink the bubble (for a rectangle, width and height follow separately). The panel sliders do the same, more precisely.
 
