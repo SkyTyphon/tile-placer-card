@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Démo de Tile Placer Card</title>
+<meta name="description" content="Essaie Tile Placer Card dans ton navigateur : un plan, des bulles à glisser, des couleurs d'état. Simulation de Home Assistant, rien à installer.">
+<meta property="og:title" content="Démo de Tile Placer Card">
+<meta property="og:description" content="Essaie la carte Lovelace dans ton navigateur : glisse les bulles sur le plan, change leurs couleurs et leurs actions. Rien à installer.">
+<meta property="og:image" content="https://raw.githubusercontent.com/SkyTyphon/tile-placer-card/main/docs/screenshot.webp">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #eef1f5;
+    --text: #1c2430;
+    --muted: #5d6877;
+    --card-background-color: #ffffff;
+    --secondary-background-color: #f1f3f6;
+    --primary-text-color: #1c2430;
+    --secondary-text-color: #5d6877;
+    --divider-color: #d3d9e2;
+    --primary-color: #03a9f4;
+    --text-primary-color: #ffffff;
+    --error-color: #db4437;
+    --success-color: #43a047;
+    --state-icon-active-color: #fdd835;
+    --link: #0b6fb3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161c;
+      --text: #e6ebf3;
+      --muted: #9aa5b6;
+      --card-background-color: #1d232c;
+      --secondary-background-color: #2a313c;
+      --primary-text-color: #e6ebf3;
+      --secondary-text-color: #9aa5b6;
+      --divider-color: #3a424f;
+      --link: #6fc1f2;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 Roboto, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; }
+  @media (max-width: 700px) { #tpc { order: 1; } .help { order: 2; } .legend { order: 3; } footer { order: 4; } }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 12px; }
+  h1 { font-size: 1.5rem; margin: 0; flex: 1 1 auto; }
+  .badge { background: #c62828; color: #fff; font-size: .75rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  a.btn, button.btn { font: inherit; font-size: .9rem; text-decoration: none; cursor: pointer; padding: 6px 14px; border-radius: 8px;
+    border: 1px solid var(--divider-color); background: var(--card-background-color); color: var(--text); }
+  a.btn.primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+  .intro { color: var(--muted); margin: 0 0 12px; }
+  .help { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+  .help li { background: var(--card-background-color); border: 1px solid var(--divider-color); border-radius: 10px; padding: 8px 12px; font-size: .9rem; }
+  .help b { display: block; }
+  #tpc { margin-bottom: 16px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: .85rem; color: var(--muted); margin-bottom: 16px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; background: var(--c); }
+  footer { color: var(--muted); font-size: .85rem; padding-bottom: 24px; }
+  footer a { color: var(--link); }
+  #toast { position: fixed; left: 50%; bottom: 80px; transform: translateX(-50%); display: grid; gap: 6px; z-index: 50; pointer-events: none; }
+  .toast { background: #263238; color: #fff; padding: 8px 14px; border-radius: 8px; font-size: .9rem; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
+  dialog { border: 1px solid var(--divider-color); border-radius: 14px; background: var(--card-background-color); color: var(--text); padding: 18px 20px; max-width: 360px; }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog h3 { margin: 0 0 4px; }
+  dialog .state { font-size: 1.4rem; margin: 4px 0; }
+  dialog .id { color: var(--muted); font-size: .8rem; word-break: break-word; }
+  dialog .note { color: var(--muted); font-size: .8rem; margin-top: 10px; }
+  dialog .row { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+  noscript { display: block; padding: 12px; background: #fff3cd; color: #5c4400; border-radius: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Tile Placer Card <span class="badge">DÉMO</span></h1>
+    <div class="actions">
+      <a class="btn primary" href="https://my.home-assistant.io/redirect/hacs_repository/?owner=SkyTyphon&amp;repository=tile-placer-card&amp;category=plugin">Installer dans HACS</a>
+      <a class="btn" href="https://github.com/SkyTyphon/tile-placer-card">Code et documentation</a>
+      <button class="btn" id="reset" type="button">Réinitialiser la démo</button>
+    </div>
+  </header>
+
+  <p class="intro">Voici la vraie carte, sur un faux Home Assistant : un plan d'exemple, des appareils fictifs. Rien n'est envoyé, rien n'est installé, et tes modifications restent dans ce navigateur.</p>
+
+  <ul class="help">
+    <li><b>1. Clique une bulle</b>Une lumière s'allume, un volet s'ouvre : l'icône change de couleur selon l'état. Les capteurs ouvrent une fenêtre « plus d'infos ».</li>
+    <li><b>2. Le crayon (en haut à droite)</b>Mode édition : glisse les bulles, clique sur l'une d'elles pour régler son nom, son icône, son entité, sa forme et ses couleurs.</li>
+    <li><b>3. « + Nouvel appareil »</b>Ajoute une bulle : choisis un appareil dans la liste, puis place-la sur le plan.</li>
+    <li><b>4. « Enregistrer »</b>Garde tes changements dans ce navigateur. « Réinitialiser » remet la démo d'origine.</li>
+  </ul>
+
+  <div id="tpc"></div>
+  <noscript>La démo a besoin de JavaScript.</noscript>
+
+  <div class="legend" aria-label="Couleurs par défaut">
+    <span style="--c:#ffc107">Allumé</span>
+    <span style="--c:#9e9e9e">Éteint</span>
+    <span style="--c:#f44336">Porte ou fenêtre ouverte</span>
+    <span style="--c:#4caf50">Porte ou fenêtre fermée</span>
+    <span style="--c:#2196f3">Volet ouvert</span>
+    <span style="--c:#ff9800">Volet fermé</span>
+    <span style="--c:#9c27b0">Volet entre 5 et 95 %</span>
+    <span style="--c:#00bcd4">En mouvement</span>
+  </div>
+
+  <footer>
+    Carte en version bêta, testée sur navigateur de bureau. Licence MIT.
+    Les icônes viennent de <a href="https://pictogrammers.com/library/mdi/">Material Design Icons</a>.
+    Les sélecteurs d'icône et d'entité de cette démo sont simplifiés : dans Home Assistant, ce sont ceux de Home Assistant.
+  </footer>
+</main>
+
+<div id="toast" aria-live="polite"></div>
+
+<dialog id="moreinfo">
+  <h3></h3>
+  <div class="state"></div>
+  <div class="id"></div>
+  <div class="note">Fenêtre « plus d'infos » de Home Assistant (simulée).</div>
+  <form method="dialog" class="row">
+    <button class="btn toggle" type="button">Basculer</button>
+    <button class="btn" value="close">Fermer</button>
+  </form>
+</dialog>
+
+<script type="module" src="../tile-placer-card.js"></script>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

@@ -19,6 +19,8 @@
 
 ⭐ **If you like the card, a star on GitHub (the "Star" button at the top of the page) helps others find it. Thank you!** If the link opens inside an app (Facebook, etc.), open it in your usual browser instead so you are signed in to GitHub.
 
+🎮 **[Try the demo in your browser](https://skytyphon.github.io/tile-placer-card/demo/)**: the real card on a fake Home Assistant, nothing to install. (The demo page is in French.)
+
 A Lovelace card (plain JavaScript, single file, no build, no dependency) that places **bubbles** (MDI icon, name, optional entity state) on a **background image**, for example your house floor plan. Bubbles are positioned in percent, dragged **directly on the map** with a mouse or a finger, and configured one by one (name, icon, entity, size, colour, tap / double tap / hold actions) from a panel that opens on the map. Changes are saved back into the dashboard.
 
 Inspired by the HA Views add-on, but delivered as a card.
