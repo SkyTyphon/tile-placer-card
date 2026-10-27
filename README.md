@@ -9,7 +9,7 @@
 > - Signale tout problème dans les [Issues](https://github.com/SkyTyphon/tile-placer-card/issues).
 
 [![beta](https://img.shields.io/badge/status-BETA-red.svg)](#)
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/skytyphoni)
 
@@ -46,23 +46,26 @@ Elle s'inspire de l'add-on HA Views, mais elle est livrée sous forme de carte.
 
 ## Installation
 
-### Avec HACS (dépôt personnalisé)
+### Avec HACS
 
 [**Tile Placer Card** dans HACS](https://my.home-assistant.io/redirect/hacs_repository/?owner=SkyTyphon&repository=tile-placer-card&category=plugin) · [Code source sur GitHub](https://github.com/SkyTyphon/tile-placer-card)
 
-**Méthode rapide :** clique sur le bouton, il ouvre ton Home Assistant sur la page du dépôt dans HACS. Valide l'ajout du dépôt, puis clique sur **Télécharger**.
+La carte est dans le catalogue par défaut de HACS (HACS doit déjà être installé) :
 
-[![Ouvrir ton Home Assistant et ajouter ce dépôt dans HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SkyTyphon&repository=tile-placer-card&category=plugin)
+1. Dans HACS, cherche **Tile Placer Card** et clique sur **Télécharger**.
+2. Recharge le navigateur avec Ctrl+F5.
 
-Le bouton passe par My Home Assistant : à la première utilisation, indique l'adresse de ton instance. HACS doit déjà être installé.
+HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 
-**Méthode manuelle :**
+**Raccourci :** ce bouton ouvre ton Home Assistant directement sur la page de la carte dans HACS. Il passe par My Home Assistant : à la première utilisation, indique l'adresse de ton instance.
+
+[![Ouvrir ton Home Assistant et afficher ce dépôt dans HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SkyTyphon&repository=tile-placer-card&category=plugin)
+
+**Solution de repli : dépôt personnalisé.** Si la carte n'apparaît pas encore dans la recherche (le catalogue peut mettre quelques heures à se mettre à jour) :
 
 1. Dans HACS, ouvre le menu ⋮ puis **Dépôts personnalisés**.
 2. Dépôt : `https://github.com/SkyTyphon/tile-placer-card`, type **Tableau de bord** (Lovelace).
 3. Installe **Tile Placer Card**, puis recharge le navigateur avec Ctrl+F5.
-
-HACS déclare la ressource tout seul. Les mises à jour passent aussi par HACS.
 
 ### À la main
 
